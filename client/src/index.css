@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", "Noto Naskh Arabic", Georgia, serif;
+  --font-sans: "Outfit", "Cairo", system-ui, sans-serif;
+  --font-arabic: "Cairo", "Noto Naskh Arabic", Tahoma, sans-serif;
+  --color-brand: #0b5d3e;
+  --color-brand-dark: #074029;
+  --color-gold: #c9a227;
+  --color-gold-soft: #e8d48b;
+  --color-sand: #f3ebe0;
+  --color-ink: #1a2420;
+  --color-muted: #5c6b63;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(201, 162, 39, 0.18), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 100% 0%, rgba(11, 93, 62, 0.12), transparent 50%),
+    linear-gradient(180deg, #f7f1e8 0%, #ebe3d4 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.55s ease-out both;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 0.65s ease-out 0.12s both;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.7s ease-out 0.22s both;
+}
+
+.timer-urgent {
+  animation: pulse-soft 1s ease-in-out infinite;
+  color: #b42318;
+}
+
+body.lang-ar {
+  font-family: var(--font-arabic);
+}
+
+body.lang-ar .font-display {
+  font-family: "Noto Naskh Arabic", "Cairo", serif;
+}
+
+/* Contenu dynamique (questions) : direction selon la langue du texte */
+.content-auto[dir='rtl'] {
+  font-family: var(--font-arabic);
+  text-align: start;
+}
+
+.content-auto[dir='ltr'] {
+  text-align: start;
+}

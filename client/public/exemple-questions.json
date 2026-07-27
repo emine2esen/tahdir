@@ -1,0 +1,24 @@
+{
+  "questions": [
+    {
+      "text": "Quelle est la capitale de la Mauritanie ?",
+      "explanation": "Nouakchott est la capitale depuis 1957.",
+      "choices": [
+        { "label": "A", "text": "Nouadhibou", "is_correct": false },
+        { "label": "B", "text": "Nouakchott", "is_correct": true },
+        { "label": "C", "text": "Rosso", "is_correct": false },
+        { "label": "D", "text": "Kaédi", "is_correct": false }
+      ]
+    },
+    {
+      "text": "ما هي عاصمة موريتانيا؟",
+      "explanation": "نواكشوط هي العاصمة منذ عام 1957.",
+      "choices": [
+        { "label": "A", "text": "نواذيبو", "is_correct": false },
+        { "label": "B", "text": "نواكشوط", "is_correct": true },
+        { "label": "C", "text": "روصو", "is_correct": false },
+        { "label": "D", "text": "كيهيدي", "is_correct": false }
+      ]
+    }
+  ]
+}
