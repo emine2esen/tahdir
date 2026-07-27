@@ -68,6 +68,12 @@ export const translations = {
       minutes: '{n} min',
       questionsCount: '{n} questions',
       noQcm: 'Aucun QCM pour ce profil.',
+      logout: 'Déconnexion',
+      logoutTitle: 'Confirmer la déconnexion',
+      logoutWarn:
+        "Attention : votre code d'accès est à usage unique. Après déconnexion, vous ne pourrez plus vous reconnecter sans un nouveau code.",
+      logoutConfirm: 'Se déconnecter',
+      logoutCancel: 'Annuler',
     },
     quiz: {
       preparing: "Préparation de l'épreuve…",
@@ -213,6 +219,12 @@ export const translations = {
       minutes: '{n} د',
       questionsCount: '{n} أسئلة',
       noQcm: 'لا يوجد اختبار لهذه الشعبة.',
+      logout: 'تسجيل الخروج',
+      logoutTitle: 'تأكيد تسجيل الخروج',
+      logoutWarn:
+        'تنبيه: رمز الدخول يُستخدم مرة واحدة فقط. بعد تسجيل الخروج لن تتمكن من الدخول مجدداً بدون رمز جديد.',
+      logoutConfirm: 'تسجيل الخروج',
+      logoutCancel: 'إلغاء',
     },
     quiz: {
       preparing: 'جاري تجهيز الاختبار…',

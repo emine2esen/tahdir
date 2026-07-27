@@ -11,6 +11,8 @@ export default function Catalog() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showLogoutNotice, setShowLogoutNotice] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +35,18 @@ export default function Catalog() {
       cancelled = true;
     };
   }, [navigate]);
+
+  async function confirmLogout() {
+    setLoggingOut(true);
+    try {
+      await api.candidateLogout();
+    } catch {
+      /* session déjà invalide */
+    }
+    setCandidateToken(null);
+    setShowLogoutNotice(false);
+    navigate('/');
+  }
 
   if (loading) {
     return (
@@ -65,9 +79,57 @@ export default function Catalog() {
             <div className="font-display text-xl text-brand">{t('brand')}</div>
             <p className="text-xs text-muted">{t('catalog.subtitle')}</p>
           </div>
-          <LangSwitcher />
+          <div className="flex items-center gap-2">
+            <LangSwitcher />
+            <button
+              type="button"
+              onClick={() => setShowLogoutNotice(true)}
+              className="text-sm px-3 py-1.5 rounded-lg border border-brand/20 hover:bg-white/70 transition"
+            >
+              {t('catalog.logout')}
+            </button>
+          </div>
         </div>
       </header>
+
+      {showLogoutNotice && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-notice-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-brand/10 bg-sand p-6 shadow-xl">
+            <h2
+              id="logout-notice-title"
+              className="font-display text-xl text-brand-dark mb-3"
+            >
+              {t('catalog.logoutTitle')}
+            </h2>
+            <p className="text-sm text-muted leading-relaxed mb-6">
+              {t('catalog.logoutWarn')}
+            </p>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutNotice(false)}
+                disabled={loggingOut}
+                className="rounded-lg border border-brand/20 px-4 py-2 text-sm hover:bg-white/70 transition"
+              >
+                {t('catalog.logoutCancel')}
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                disabled={loggingOut}
+                className="rounded-lg bg-red-700 text-white px-4 py-2 text-sm font-medium hover:bg-red-800 transition disabled:opacity-60"
+              >
+                {t('catalog.logoutConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
         {data?.assignedProfilId && (
