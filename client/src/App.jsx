@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Catalog from './pages/Catalog';
 import Quiz from './pages/Quiz';
+import Simulation from './pages/Simulation';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -28,6 +29,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/simulation" element={<Simulation />} />
         <Route path="/connexion" element={<Login />} />
         <Route
           path="/catalogue"

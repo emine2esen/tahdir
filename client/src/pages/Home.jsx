@@ -48,12 +48,6 @@ export default function Home() {
           >
             {t('nav.login')}
           </Link>
-          <Link
-            to="/admin"
-            className="text-sm text-muted hover:text-brand transition-colors"
-          >
-            {t('nav.admin')}
-          </Link>
         </div>
       </header>
 
@@ -76,17 +70,17 @@ export default function Home() {
             </p>
             <div className="animate-fade-up-delay-2 flex flex-wrap items-center justify-center gap-3">
               <Link
-                to="/connexion"
+                to="/simulation"
                 className="inline-flex items-center justify-center rounded-xl bg-brand hover:bg-brand-dark text-white font-semibold px-7 py-3.5 transition"
+              >
+                {t('sim.tryFromHome')}
+              </Link>
+              <Link
+                to="/connexion"
+                className="inline-flex items-center justify-center rounded-xl border border-brand/25 px-7 py-3.5 text-brand-dark hover:bg-white/60 transition"
               >
                 {t('home.enterCode')}
               </Link>
-              <a
-                href="#fonctionnalites"
-                className="inline-flex items-center justify-center rounded-xl border border-brand/25 px-7 py-3.5 text-brand-dark hover:bg-white/60 transition"
-              >
-                {t('nav.discover')}
-              </a>
             </div>
           </div>
         </section>
@@ -136,12 +130,20 @@ export default function Home() {
             {t('home.readyTitle')}
           </h2>
           <p className="text-muted mb-6">{t('home.readyText')}</p>
-          <Link
-            to="/connexion"
-            className="inline-flex rounded-xl bg-brand hover:bg-brand-dark text-white font-semibold px-7 py-3.5 transition"
-          >
-            {t('home.accessExams')}
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/simulation"
+              className="inline-flex rounded-xl border border-brand/25 px-7 py-3.5 text-brand-dark hover:bg-white/60 transition"
+            >
+              {t('sim.tryFromHome')}
+            </Link>
+            <Link
+              to="/connexion"
+              className="inline-flex rounded-xl bg-brand hover:bg-brand-dark text-white font-semibold px-7 py-3.5 transition"
+            >
+              {t('home.accessExams')}
+            </Link>
+          </div>
         </section>
       </main>
 

@@ -240,13 +240,21 @@ router.get('/qcms/:id/questions', requireAdmin, (req, res) => {
     .all(qcmId);
 
   const getChoices = db.prepare(
-    'SELECT id, label, text, is_correct FROM choices WHERE question_id = ? ORDER BY label'
+    'SELECT id, label, text, text_fr, text_ar, is_correct FROM choices WHERE question_id = ? ORDER BY label'
   );
 
   res.json(
     questions.map((q) => ({
       ...q,
-      choices: getChoices.all(q.id),
+      text_fr: q.text_fr || q.text || '',
+      text_ar: q.text_ar || '',
+      explanation_fr: q.explanation_fr || q.explanation || '',
+      explanation_ar: q.explanation_ar || '',
+      choices: getChoices.all(q.id).map((c) => ({
+        ...c,
+        text_fr: c.text_fr || c.text || '',
+        text_ar: c.text_ar || '',
+      })),
     }))
   );
 });
@@ -261,8 +269,17 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'Maximum 50 questions par QCM' });
   }
 
-  const { text, explanation = '', image_url = null, choices, order_num } = req.body || {};
-  if (!text?.trim()) return res.status(400).json({ error: 'Texte de la question requis' });
+  const body = req.body || {};
+  const text_fr = String(body.text_fr ?? body.text ?? '').trim();
+  const text_ar = String(body.text_ar ?? '').trim();
+  const explanation_fr = String(body.explanation_fr ?? body.explanation ?? '').trim();
+  const explanation_ar = String(body.explanation_ar ?? '').trim();
+  const image_url = body.image_url || null;
+  const choices = body.choices;
+
+  if (!text_fr && !text_ar) {
+    return res.status(400).json({ error: 'Texte FR ou AR de la question requis' });
+  }
   if (!Array.isArray(choices) || choices.length !== 4) {
     return res.status(400).json({ error: 'Exactement 4 choix (A,B,C,D) requis' });
   }
@@ -276,24 +293,42 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
   }
 
   const nextOrder =
-    order_num ||
+    body.order_num ||
     (db.prepare('SELECT COALESCE(MAX(order_num), 0) + 1 AS n FROM questions WHERE qcm_id = ?').get(
       qcmId
     ).n);
 
+  const primaryText = text_fr || text_ar;
+  const primaryExpl = explanation_fr || explanation_ar;
+
   const insertQ = db.prepare(
-    `INSERT INTO questions (qcm_id, order_num, text, image_url, explanation)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO questions (
+      qcm_id, order_num, text, text_fr, text_ar, image_url,
+      explanation, explanation_fr, explanation_ar
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertC = db.prepare(
-    `INSERT INTO choices (question_id, label, text, is_correct) VALUES (?, ?, ?, ?)`
+    `INSERT INTO choices (question_id, label, text, text_fr, text_ar, is_correct)
+     VALUES (?, ?, ?, ?, ?, ?)`
   );
 
   const tx = db.transaction(() => {
-    const result = insertQ.run(qcmId, nextOrder, text.trim(), image_url, explanation);
+    const result = insertQ.run(
+      qcmId,
+      nextOrder,
+      primaryText,
+      text_fr,
+      text_ar,
+      image_url,
+      primaryExpl,
+      explanation_fr,
+      explanation_ar
+    );
     const qid = result.lastInsertRowid;
     for (const c of choices) {
-      insertC.run(qid, c.label, c.text || '', c.is_correct ? 1 : 0);
+      const cfr = String(c.text_fr ?? c.text ?? '').trim();
+      const car = String(c.text_ar ?? '').trim();
+      insertC.run(qid, c.label, cfr || car, cfr, car, c.is_correct ? 1 : 0);
     }
     touch('qcms', qcmId);
     return qid;
@@ -302,7 +337,9 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
   const qid = tx();
   const question = db.prepare('SELECT * FROM questions WHERE id = ?').get(qid);
   const qChoices = db
-    .prepare('SELECT id, label, text, is_correct FROM choices WHERE question_id = ? ORDER BY label')
+    .prepare(
+      'SELECT id, label, text, text_fr, text_ar, is_correct FROM choices WHERE question_id = ? ORDER BY label'
+    )
     .all(qid);
   res.status(201).json({ ...question, choices: qChoices });
 });
@@ -318,9 +355,13 @@ function normalizeImportChoices(choices) {
     if (!['A', 'B', 'C', 'D'].includes(label)) {
       throw new Error('Les labels de choix doivent être A, B, C ou D');
     }
+    const text_fr = String(c.text_fr ?? c.text ?? c.texte ?? '').trim();
+    const text_ar = String(c.text_ar ?? c.texte_ar ?? '').trim();
     byLabel[label] = {
       label,
-      text: String(c.text ?? c.texte ?? '').trim(),
+      text_fr,
+      text_ar,
+      text: text_fr || text_ar,
       is_correct: !!(c.is_correct ?? c.correcte ?? c.correct),
     };
   }
@@ -336,13 +377,60 @@ function normalizeImportChoices(choices) {
 }
 
 function normalizeImportQuestion(raw, index) {
-  const text = String(raw.text ?? raw.enonce ?? raw.question ?? '').trim();
-  if (!text) {
-    throw new Error(`Question #${index + 1} : texte manquant`);
+  const text_fr = String(
+    raw.text_fr ?? raw.text ?? raw.enonce ?? raw.question ?? ''
+  ).trim();
+  const text_ar = String(raw.text_ar ?? raw.enonce_ar ?? raw.question_ar ?? '').trim();
+  if (!text_fr && !text_ar) {
+    throw new Error(`Question #${index + 1} : texte manquant (FR ou AR)`);
   }
 
   let choices = raw.choices ?? raw.choix;
-  // Format court : { "A": "...", "B": "...", correct: ["A"] }
+  if (!choices && (raw.A || raw.B || raw.C || raw.D)) {
+    const correct = new Set(
+      []
+        .concat(raw.correct || raw.correctes || raw.bonnes_reponses || [])
+        .map((x) => String(x).toUpperCase())
+    );
+    if (raw.bonne_reponse) correct.add(String(raw.bonne_reponse).toUpperCase());
+    choices = ['A', 'B', 'C', 'D'].map((label) => ({
+      label,
+      text_fr: raw[label] || '',
+      text_ar: raw[`${label}_ar`] || '',
+      is_correct: correct.has(label),
+    }));
+  }
+
+  try {
+    return {
+      text_fr,
+      text_ar,
+      text: text_fr || text_ar,
+      explanation_fr: String(
+        raw.explanation_fr ?? raw.explanation ?? raw.explication ?? ''
+      ).trim(),
+      explanation_ar: String(
+        raw.explanation_ar ?? raw.explication_ar ?? ''
+      ).trim(),
+      image_url: raw.image_url || raw.image || null,
+      choices: normalizeImportChoices(choices),
+    };
+  } catch (e) {
+    throw new Error(`Question #${index + 1} : ${e.message}`);
+  }
+}
+
+/**
+ * Normalise une question issue d'un fichier JSON monolingue (une seule langue par
+ * fichier). Un objet vide / sans texte signifie « pas de version dans cette langue
+ * pour cette question » et renvoie null plutôt que de lever une erreur, pour
+ * permettre l'import de 2 fichiers (AR + FR) désalignés question par question.
+ */
+function normalizeImportQuestionMonolingual(raw, index, langLabel) {
+  const text = String(raw?.text ?? raw?.enonce ?? raw?.question ?? '').trim();
+  if (!text) return null;
+
+  let choices = raw.choices ?? raw.choix;
   if (!choices && (raw.A || raw.B || raw.C || raw.D)) {
     const correct = new Set(
       []
@@ -357,16 +445,81 @@ function normalizeImportQuestion(raw, index) {
     }));
   }
 
-  try {
-    return {
-      text,
-      explanation: String(raw.explanation ?? raw.explication ?? '').trim(),
-      image_url: raw.image_url || raw.image || null,
-      choices: normalizeImportChoices(choices),
-    };
-  } catch (e) {
-    throw new Error(`Question #${index + 1} : ${e.message}`);
+  if (!Array.isArray(choices) || choices.length !== 4) {
+    throw new Error(
+      `Question #${index + 1} (${langLabel}) : chaque question doit avoir exactement 4 choix (A,B,C,D)`
+    );
   }
+
+  const byLabel = {};
+  for (const c of choices) {
+    const label = String(c.label || c.lettre || '').toUpperCase();
+    if (!['A', 'B', 'C', 'D'].includes(label)) {
+      throw new Error(`Question #${index + 1} (${langLabel}) : les labels de choix doivent être A, B, C ou D`);
+    }
+    byLabel[label] = {
+      label,
+      text: String(c.text ?? c.texte ?? '').trim(),
+      is_correct: !!(c.is_correct ?? c.correcte ?? c.correct),
+    };
+  }
+  if (!['A', 'B', 'C', 'D'].every((l) => byLabel[l])) {
+    throw new Error(`Question #${index + 1} (${langLabel}) : les labels A, B, C et D sont obligatoires`);
+  }
+  if (!['A', 'B', 'C', 'D'].some((l) => byLabel[l].is_correct)) {
+    throw new Error(`Question #${index + 1} (${langLabel}) : au moins une bonne réponse est requise`);
+  }
+
+  return {
+    text,
+    explanation: String(raw.explanation ?? raw.explication ?? '').trim(),
+    image_url: raw.image_url || raw.image || null,
+    choices: ['A', 'B', 'C', 'D'].map((l) => byLabel[l]),
+  };
+}
+
+/**
+ * Fusionne 2 listes monolingues (AR et FR) alignées par position (même index =
+ * même question). Une question absente d'une des deux listes (liste plus courte,
+ * ou entrée vide) reste disponible uniquement dans l'autre langue.
+ */
+function mergeBilingualQuestions(arList, frList) {
+  const len = Math.max(arList.length, frList.length);
+  const merged = [];
+  for (let i = 0; i < len; i++) {
+    const ar = arList[i] || null;
+    const fr = frList[i] || null;
+    if (!ar && !fr) continue;
+
+    const choices = ['A', 'B', 'C', 'D'].map((label) => {
+      const arC = ar?.choices.find((c) => c.label === label);
+      const frC = fr?.choices.find((c) => c.label === label);
+      return {
+        label,
+        text_ar: arC?.text || '',
+        text_fr: frC?.text || '',
+        text: frC?.text || arC?.text || '',
+        is_correct: !!(arC?.is_correct || frC?.is_correct),
+      };
+    });
+    if (!choices.some((c) => c.is_correct)) {
+      throw new Error(`Question #${i + 1} : au moins une bonne réponse est requise`);
+    }
+
+    merged.push({
+      text_ar: ar?.text || '',
+      text_fr: fr?.text || '',
+      text: fr?.text || ar?.text || '',
+      explanation_ar: ar?.explanation || '',
+      explanation_fr: fr?.explanation || '',
+      image_url: fr?.image_url || ar?.image_url || null,
+      choices,
+    });
+  }
+  if (!merged.length) {
+    throw new Error('Aucune question valide dans les fichiers fournis');
+  }
+  return merged;
 }
 
 router.post('/qcms/:id/questions/import', requireAdmin, (req, res) => {
@@ -375,26 +528,36 @@ router.post('/qcms/:id/questions/import', requireAdmin, (req, res) => {
   if (!qcm) return res.status(404).json({ error: 'QCM introuvable' });
 
   const replace = !!(req.body?.replace || req.body?.remplacer);
-  let payload = req.body?.questions ?? req.body?.questions_list ?? req.body;
-
-  if (Array.isArray(payload)) {
-    // body is the array itself
-  } else if (payload && Array.isArray(payload.questions)) {
-    payload = payload.questions;
-  } else {
-    return res.status(400).json({
-      error:
-        'Format JSON invalide. Attendu : { "questions": [ ... ] } ou un tableau de questions.',
-    });
-  }
-
-  if (!payload.length) {
-    return res.status(400).json({ error: 'Aucune question dans le fichier' });
-  }
+  const arRaw = req.body?.questions_ar;
+  const frRaw = req.body?.questions_fr;
+  const separateMode = Array.isArray(arRaw) || Array.isArray(frRaw);
 
   let normalized;
   try {
-    normalized = payload.map((q, i) => normalizeImportQuestion(q, i));
+    if (separateMode) {
+      const arList = Array.isArray(arRaw)
+        ? arRaw.map((q, i) => normalizeImportQuestionMonolingual(q, i, 'AR'))
+        : [];
+      const frList = Array.isArray(frRaw)
+        ? frRaw.map((q, i) => normalizeImportQuestionMonolingual(q, i, 'FR'))
+        : [];
+      normalized = mergeBilingualQuestions(arList, frList);
+    } else {
+      let payload = req.body?.questions ?? req.body?.questions_list ?? req.body;
+      if (Array.isArray(payload)) {
+        // body is the array itself
+      } else if (payload && Array.isArray(payload.questions)) {
+        payload = payload.questions;
+      } else {
+        throw new Error(
+          'Format JSON invalide. Attendu : { "questions": [ ... ] } ou un tableau de questions.'
+        );
+      }
+      if (!payload.length) {
+        throw new Error('Aucune question dans le fichier');
+      }
+      normalized = payload.map((q, i) => normalizeImportQuestion(q, i));
+    }
   } catch (e) {
     return res.status(400).json({ error: e.message });
   }
@@ -410,11 +573,14 @@ router.post('/qcms/:id/questions/import', requireAdmin, (req, res) => {
   }
 
   const insertQ = db.prepare(
-    `INSERT INTO questions (qcm_id, order_num, text, image_url, explanation)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO questions (
+      qcm_id, order_num, text, text_fr, text_ar, image_url,
+      explanation, explanation_fr, explanation_ar
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertC = db.prepare(
-    `INSERT INTO choices (question_id, label, text, is_correct) VALUES (?, ?, ?, ?)`
+    `INSERT INTO choices (question_id, label, text, text_fr, text_ar, is_correct)
+     VALUES (?, ?, ?, ?, ?, ?)`
   );
   const deleteAll = db.prepare('DELETE FROM questions WHERE qcm_id = ?');
 
@@ -431,11 +597,22 @@ router.post('/qcms/:id/questions/import', requireAdmin, (req, res) => {
         qcmId,
         order,
         q.text,
+        q.text_fr,
+        q.text_ar,
         q.image_url,
-        q.explanation
+        q.explanation_fr || q.explanation_ar,
+        q.explanation_fr,
+        q.explanation_ar
       );
       for (const c of q.choices) {
-        insertC.run(result.lastInsertRowid, c.label, c.text, c.is_correct ? 1 : 0);
+        insertC.run(
+          result.lastInsertRowid,
+          c.label,
+          c.text,
+          c.text_fr,
+          c.text_ar,
+          c.is_correct ? 1 : 0
+        );
       }
       order += 1;
     }
@@ -464,17 +641,45 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
   const existing = db.prepare('SELECT * FROM questions WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Question introuvable' });
 
-  const text = req.body.text ?? existing.text;
-  const explanation = req.body.explanation ?? existing.explanation;
+  const text_fr = String(
+    req.body.text_fr ?? existing.text_fr ?? existing.text ?? ''
+  ).trim();
+  const text_ar = String(req.body.text_ar ?? existing.text_ar ?? '').trim();
+  const explanation_fr = String(
+    req.body.explanation_fr ?? existing.explanation_fr ?? existing.explanation ?? ''
+  ).trim();
+  const explanation_ar = String(
+    req.body.explanation_ar ?? existing.explanation_ar ?? ''
+  ).trim();
   const image_url =
     req.body.image_url !== undefined ? req.body.image_url : existing.image_url;
   const order_num = req.body.order_num ?? existing.order_num;
   const choices = req.body.choices;
+  const primaryText = text_fr || text_ar;
+  const primaryExpl = explanation_fr || explanation_ar;
+
+  if (!primaryText) {
+    return res.status(400).json({ error: 'Texte FR ou AR requis' });
+  }
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE questions SET text = ?, explanation = ?, image_url = ?, order_num = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(text, explanation, image_url, order_num, id);
+      `UPDATE questions SET
+        text = ?, text_fr = ?, text_ar = ?,
+        explanation = ?, explanation_fr = ?, explanation_ar = ?,
+        image_url = ?, order_num = ?, updated_at = datetime('now')
+       WHERE id = ?`
+    ).run(
+      primaryText,
+      text_fr,
+      text_ar,
+      primaryExpl,
+      explanation_fr,
+      explanation_ar,
+      image_url,
+      order_num,
+      id
+    );
 
     if (Array.isArray(choices) && choices.length === 4) {
       if (!choices.some((c) => c.is_correct)) {
@@ -482,10 +687,13 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
       }
       db.prepare('DELETE FROM choices WHERE question_id = ?').run(id);
       const insertC = db.prepare(
-        `INSERT INTO choices (question_id, label, text, is_correct) VALUES (?, ?, ?, ?)`
+        `INSERT INTO choices (question_id, label, text, text_fr, text_ar, is_correct)
+         VALUES (?, ?, ?, ?, ?, ?)`
       );
       for (const c of choices) {
-        insertC.run(id, c.label, c.text || '', c.is_correct ? 1 : 0);
+        const cfr = String(c.text_fr ?? c.text ?? '').trim();
+        const car = String(c.text_ar ?? '').trim();
+        insertC.run(id, c.label, cfr || car, cfr, car, c.is_correct ? 1 : 0);
       }
     }
     touch('qcms', existing.qcm_id);
@@ -499,7 +707,9 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
 
   const question = db.prepare('SELECT * FROM questions WHERE id = ?').get(id);
   const qChoices = db
-    .prepare('SELECT id, label, text, is_correct FROM choices WHERE question_id = ? ORDER BY label')
+    .prepare(
+      'SELECT id, label, text, text_fr, text_ar, is_correct FROM choices WHERE question_id = ? ORDER BY label'
+    )
     .all(id);
   res.json({ ...question, choices: qChoices });
 });
@@ -542,10 +752,13 @@ router.get('/codes', requireAdmin, (req, res) => {
 });
 
 router.post('/codes', requireAdmin, (req, res) => {
-  const { count = 1, label = '', profil_id = null } = req.body || {};
+  const { count = 1, label = '', profil_id = null, duration_days = 7 } = req.body || {};
   const n = Math.min(Math.max(Number(count) || 1, 1), 100);
+  const days = [1, 2, 7, 30].includes(Number(duration_days))
+    ? Number(duration_days)
+    : 7;
   const insert = db.prepare(
-    `INSERT INTO access_codes (code, label, profil_id) VALUES (?, ?, ?)`
+    `INSERT INTO access_codes (code, label, profil_id, duration_days) VALUES (?, ?, ?, ?)`
   );
 
   const codes = [];
@@ -558,7 +771,12 @@ router.post('/codes', requireAdmin, (req, res) => {
         attempts++;
       } while (db.prepare('SELECT id FROM access_codes WHERE code = ?').get(code) && attempts < 20);
 
-      const result = insert.run(code, label, profil_id ? Number(profil_id) : null);
+      const result = insert.run(
+        code,
+        label,
+        profil_id ? Number(profil_id) : null,
+        days
+      );
       codes.push(db.prepare('SELECT * FROM access_codes WHERE id = ?').get(result.lastInsertRowid));
     }
   });

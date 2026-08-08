@@ -37,7 +37,7 @@ export const translations = {
         'À la fin, visualisez votre score et les bonnes réponses pour apprendre de chaque erreur.',
       feat4Title: 'Accès sécurisé',
       feat4Text:
-        'Un code unique vous est remis. Une fois utilisé, il ne peut plus être partagé ni réutilisé.',
+        'Un code unique vous est remis, valable de 1 jour à 1 mois. Une seule session à la fois : une nouvelle connexion déconnecte les autres.',
       feat5Title: 'Questions bilingues',
       feat5Text:
         'Les énoncés et réponses peuvent être rédigés en arabe ou en français selon le concours.',
@@ -50,10 +50,10 @@ export const translations = {
     login: {
       title: 'Connexion candidat',
       subtitle:
-        "Entrez le code unique qui vous a été remis. Il ne pourra être utilisé qu'une seule fois.",
+        "Entrez le code unique qui vous a été remis. Il reste valable jusqu'à sa date d'expiration.",
       codeLabel: "Code d'accès unique",
       codeHint:
-        'Une seule session active à la fois. Votre code devient invalide après la première connexion.',
+        'Une seule session active à la fois. Vous pouvez vous reconnecter avec le même code tant qu\'il n\'a pas expiré (1 jour à 1 mois selon votre abonnement).',
       submit: 'Accéder aux épreuves',
       loading: 'Connexion…',
     },
@@ -71,7 +71,7 @@ export const translations = {
       logout: 'Déconnexion',
       logoutTitle: 'Confirmer la déconnexion',
       logoutWarn:
-        "Attention : votre code d'accès est à usage unique. Après déconnexion, vous ne pourrez plus vous reconnecter sans un nouveau code.",
+        "Après déconnexion, une seule session reste possible. Vous pourrez vous reconnecter avec le même code tant qu'il n'a pas expiré (1 jour à 1 mois selon votre abonnement). Deux sessions simultanées ne sont pas autorisées.",
       logoutConfirm: 'Se déconnecter',
       logoutCancel: 'Annuler',
     },
@@ -98,6 +98,8 @@ export const translations = {
       next: 'Suivant',
       finish: 'Terminer',
       arabicNote: 'Les questions peuvent être en arabe ou en français.',
+      langFallbackFr: "Cette question n'existe qu'en français.",
+      langFallbackAr: "Cette question n'existe qu'en arabe.",
     },
     levels: {
       1: 'Facile',
@@ -116,6 +118,24 @@ export const translations = {
       ar: 'العربية',
       switch: 'Langue',
     },
+    sim: {
+      title: 'Simulation gratuite',
+      subtitle:
+        'Choisissez un recrutement et un profil, puis entraînez-vous sur 5 questions.',
+      pickConcours: 'Recrutement / Concours',
+      pickProfil: 'Profil / شعبة',
+      start: 'Commencer la simulation (5 questions)',
+      starting: 'Chargement…',
+      loading: 'Chargement…',
+      progress: 'Question {current}/{total}',
+      noQuestions: 'Aucune question disponible pour ce profil pour le moment.',
+      ctaText:
+        'Souhaitez-vous compléter votre évaluation ? Contactez-nous au numéro',
+      whatsapp: 'Continuer sur WhatsApp',
+      retry: 'Réessayer',
+      fullAccess: 'J’ai un code d’accès',
+      tryFromHome: 'Essayer la simulation',
+    },
     admin: {
       backoffice: 'Back-office',
       dashboard: 'Tableau de bord',
@@ -133,16 +153,28 @@ export const translations = {
       questionsSubtitle:
         "Jusqu'à 50 questions par QCM · 4 choix · une ou plusieurs bonnes réponses. Les questions peuvent être en arabe ou en français.",
       importJson: 'Importer un fichier JSON',
-      importHint: "Chargez jusqu'à 50 questions d'un coup pour ce QCM.",
+      importHint:
+        "Chargez un fichier JSON par langue (arabe et/ou français), question par question dans le même ordre. Si une question n'a pas de version dans une langue, laissez-la vide ou omettez-la à la fin du fichier : elle restera disponible dans l'autre langue.",
       downloadExample: 'Télécharger un exemple',
-      chooseJson: 'Choisir un fichier JSON',
+      chooseJsonAr: 'Fichier JSON — Arabe',
+      chooseJsonFr: 'Fichier JSON — Français',
+      importSeparateBtn: 'Importer',
+      importSeparateNeedOne: 'Choisissez au moins un fichier (arabe ou français)',
       importing: 'Import…',
       replaceExisting: 'Remplacer les questions existantes',
       newQuestion: 'Nouvelle question ({n}/50)',
       questionText: 'Énoncé de la question (FR ou AR)',
+      questionTextFr: 'Énoncé (Français)',
+      questionTextAr: 'Énoncé (Arabe)',
       correct: 'Correcte',
       choiceText: 'Texte choix {label}',
+      choiceTextFr: 'Choix {label} (Français)',
+      choiceTextAr: 'Choix {label} (Arabe)',
       explanation: 'Explication (affichée après correction)',
+      explanationFr: 'Explication (Français)',
+      explanationAr: 'Explication (Arabe)',
+      bilingualHint:
+        'Renseignez au moins une langue par champ. Les deux langues sont recommandées pour que la question soit disponible en français et en arabe.',
       imageOptional: 'Image (optionnel)',
       addQuestion: 'Ajouter la question',
       save: 'Enregistrer',
@@ -190,7 +222,7 @@ export const translations = {
         'في النهاية ترى درجتك والإجابات الصحيحة لتتعلم من أخطائك.',
       feat4Title: 'دخول آمن',
       feat4Text:
-        'رمز فريد يُستخدم مرة واحدة فقط ولا يمكن مشاركته بعد الاستعمال.',
+        'رمز فريد صالح من يوم إلى شهر. جلسة واحدة فقط في نفس الوقت — كل دخول جديد يُنهي الجلسات الأخرى.',
       feat5Title: 'أسئلة ثنائية اللغة',
       feat5Text:
         'يمكن صياغة الأسئلة والإجابات بالعربية أو بالفرنسية حسب المسابقة.',
@@ -201,10 +233,10 @@ export const translations = {
     },
     login: {
       title: 'دخول المترشح',
-      subtitle: 'أدخل الرمز الفريد الذي حصلت عليه. لا يمكن استخدامه إلا مرة واحدة.',
+      subtitle: 'أدخل الرمز الفريد الذي حصلت عليه. يبقى صالحاً حتى تاريخ انتهائه.',
       codeLabel: 'رمز الدخول الفريد',
       codeHint:
-        'جلسة واحدة فقط في نفس الوقت. يصبح الرمز غير صالح بعد أول استخدام.',
+        'جلسة واحدة فقط في نفس الوقت. يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من يوم إلى شهر حسب اشتراكك).',
       submit: 'الدخول إلى الاختبارات',
       loading: 'جاري الدخول…',
     },
@@ -222,7 +254,7 @@ export const translations = {
       logout: 'تسجيل الخروج',
       logoutTitle: 'تأكيد تسجيل الخروج',
       logoutWarn:
-        'تنبيه: رمز الدخول يُستخدم مرة واحدة فقط. بعد تسجيل الخروج لن تتمكن من الدخول مجدداً بدون رمز جديد.',
+        'بعد تسجيل الخروج يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من يوم إلى شهر حسب اشتراكك). لا يُسمح بجلستين في نفس الوقت.',
       logoutConfirm: 'تسجيل الخروج',
       logoutCancel: 'إلغاء',
     },
@@ -248,6 +280,8 @@ export const translations = {
       next: 'التالي',
       finish: 'إنهاء',
       arabicNote: 'يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
+      langFallbackFr: 'هذا السؤال متوفر بالفرنسية فقط.',
+      langFallbackAr: 'هذا السؤال متوفر بالعربية فقط.',
     },
     levels: {
       1: 'سهل',
@@ -266,6 +300,22 @@ export const translations = {
       ar: 'العربية',
       switch: 'اللغة',
     },
+    sim: {
+      title: 'محاكاة مجانية',
+      subtitle: 'اختر مسابقة وشعبة ثم تدرب على 5 أسئلة.',
+      pickConcours: 'المسابقة / التوظيف',
+      pickProfil: 'الشعبة',
+      start: 'بدء المحاكاة (5 أسئلة)',
+      starting: 'جاري التحميل…',
+      loading: 'جاري التحميل…',
+      progress: 'السؤال {current}/{total}',
+      noQuestions: 'لا توجد أسئلة متاحة لهذه الشعبة حالياً.',
+      ctaText: 'هل تريد إكمال تقييمك؟ تواصل معنا على الرقم',
+      whatsapp: 'المتابعة عبر واتساب',
+      retry: 'إعادة المحاولة',
+      fullAccess: 'لدي رمز دخول',
+      tryFromHome: 'جرّب المحاكاة',
+    },
     admin: {
       backoffice: 'لوحة الإدارة',
       dashboard: 'لوحة التحكم',
@@ -283,16 +333,28 @@ export const translations = {
       questionsSubtitle:
         'حتى 50 سؤالاً لكل اختبار · 4 خيارات · إجابة صحيحة واحدة أو أكثر. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
       importJson: 'استيراد ملف JSON',
-      importHint: 'حمّل حتى 50 سؤالاً دفعة واحدة لهذا الاختبار.',
+      importHint:
+        'حمّل ملف JSON لكل لغة (عربي و/أو فرنسي)، بنفس ترتيب الأسئلة. إذا لم يكن للسؤال نسخة بلغة ما، اتركه فارغاً أو احذفه من نهاية الملف: سيبقى متاحاً باللغة الأخرى.',
       downloadExample: 'تحميل نموذج',
-      chooseJson: 'اختيار ملف JSON',
+      chooseJsonAr: 'ملف JSON — عربي',
+      chooseJsonFr: 'ملف JSON — فرنسي',
+      importSeparateBtn: 'استيراد',
+      importSeparateNeedOne: 'اختر ملفاً واحداً على الأقل (عربي أو فرنسي)',
       importing: 'جاري الاستيراد…',
       replaceExisting: 'استبدال الأسئلة الحالية',
       newQuestion: 'سؤال جديد ({n}/50)',
       questionText: 'نص السؤال (عربي أو فرنسي)',
+      questionTextFr: 'نص السؤال (بالفرنسية)',
+      questionTextAr: 'نص السؤال (بالعربية)',
       correct: 'صحيحة',
       choiceText: 'نص الخيار {label}',
+      choiceTextFr: 'الخيار {label} (بالفرنسية)',
+      choiceTextAr: 'الخيار {label} (بالعربية)',
       explanation: 'الشرح (يظهر بعد التصحيح)',
+      explanationFr: 'الشرح (بالفرنسية)',
+      explanationAr: 'الشرح (بالعربية)',
+      bilingualHint:
+        'املأ لغة واحدة على الأقل في كل حقل. يُفضّل ملء اللغتين ليكون السؤال متاحاً بالفرنسية والعربية.',
       imageOptional: 'صورة (اختياري)',
       addQuestion: 'إضافة السؤال',
       save: 'حفظ',
@@ -308,7 +370,7 @@ export const translations = {
 
 export function getStoredLang() {
   const stored = localStorage.getItem(LANG_KEY);
-  return stored === 'ar' || stored === 'fr' ? stored : 'fr';
+  return stored === 'ar' || stored === 'fr' ? stored : 'ar';
 }
 
 export function storeLang(lang) {

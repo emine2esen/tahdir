@@ -6,14 +6,17 @@ import { textDir } from '../../i18n/translations';
 function blankChoices() {
   return ['A', 'B', 'C', 'D'].map((label) => ({
     label,
-    text: '',
+    text_fr: '',
+    text_ar: '',
     is_correct: label === 'A',
   }));
 }
 
 const emptyQuestion = {
-  text: '',
-  explanation: '',
+  text_fr: '',
+  text_ar: '',
+  explanation_fr: '',
+  explanation_ar: '',
   image_url: '',
   choices: blankChoices(),
 };
@@ -32,6 +35,9 @@ export default function AdminQuestions() {
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [replaceOnImport, setReplaceOnImport] = useState(false);
+  const [importFileAr, setImportFileAr] = useState(null);
+  const [importFileFr, setImportFileFr] = useState(null);
+  const [importResetKey, setImportResetKey] = useState(0);
 
   useEffect(() => {
     api.getProfils().then((p) => {
@@ -83,10 +89,16 @@ export default function AdminQuestions() {
   async function onSubmit(e) {
     e.preventDefault();
     setError('');
+    if (!form.text_fr.trim() && !form.text_ar.trim()) {
+      setError(t('admin.bilingualHint'));
+      return;
+    }
     try {
       const payload = {
-        text: form.text,
-        explanation: form.explanation,
+        text_fr: form.text_fr,
+        text_ar: form.text_ar,
+        explanation_fr: form.explanation_fr,
+        explanation_ar: form.explanation_ar,
         image_url: form.image_url || null,
         choices: form.choices,
       };
@@ -103,12 +115,15 @@ export default function AdminQuestions() {
   function startEdit(q) {
     setEditId(q.id);
     setForm({
-      text: q.text,
-      explanation: q.explanation || '',
+      text_fr: q.text_fr || q.text || '',
+      text_ar: q.text_ar || '',
+      explanation_fr: q.explanation_fr || q.explanation || '',
+      explanation_ar: q.explanation_ar || '',
       image_url: q.image_url || '',
       choices: q.choices.map((c) => ({
         label: c.label,
-        text: c.text,
+        text_fr: c.text_fr || c.text || '',
+        text_ar: c.text_ar || '',
         is_correct: !!c.is_correct,
       })),
     });
@@ -132,29 +147,38 @@ export default function AdminQuestions() {
     setQcms(list);
   }
 
-  async function onImportJson(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file || !qcmId) return;
+  async function parseQuestionsFile(file) {
+    const text = await file.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Fichier JSON invalide (syntaxe incorrecte) : ${file.name}`);
+    }
+    return Array.isArray(data) ? data : data?.questions;
+  }
+
+  async function onImportSeparate() {
+    if (!qcmId) return;
+    if (!importFileAr && !importFileFr) {
+      setError(t('admin.importSeparateNeedOne'));
+      return;
+    }
 
     setError('');
     setSuccess('');
     setImporting(true);
     try {
-      const text = await file.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error('Fichier JSON invalide (syntaxe incorrecte)');
-      }
+      const body = { replace: replaceOnImport };
+      if (importFileAr) body.questions_ar = await parseQuestionsFile(importFileAr);
+      if (importFileFr) body.questions_fr = await parseQuestionsFile(importFileFr);
 
-      const result = await api.importQuestions(qcmId, {
-        ...(Array.isArray(data) ? { questions: data } : data),
-        replace: replaceOnImport,
-      });
+      const result = await api.importQuestions(qcmId, body);
 
       await refreshQuestions();
+      setImportFileAr(null);
+      setImportFileFr(null);
+      setImportResetKey((k) => k + 1);
       setSuccess(
         `${result.imported} question(s) importée(s)${
           result.replaced ? ' (remplacement)' : ''
@@ -234,26 +258,45 @@ export default function AdminQuestions() {
               {t('admin.downloadExample')}
             </a>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="inline-flex items-center gap-2 rounded-lg bg-brand text-white px-4 py-2 cursor-pointer hover:bg-brand-dark transition">
-              {importing ? t('admin.importing') : t('admin.chooseJson')}
+          <div className="flex flex-wrap items-end gap-4" key={importResetKey}>
+            <label className="text-sm">
+              {t('admin.chooseJsonAr')}
               <input
                 type="file"
                 accept=".json,application/json"
-                className="hidden"
+                className="block mt-1 text-sm"
+                dir="rtl"
                 disabled={importing}
-                onChange={onImportJson}
+                onChange={(e) => setImportFileAr(e.target.files?.[0] || null)}
               />
             </label>
-            <label className="text-sm flex items-center gap-2">
+            <label className="text-sm">
+              {t('admin.chooseJsonFr')}
               <input
-                type="checkbox"
-                checked={replaceOnImport}
-                onChange={(e) => setReplaceOnImport(e.target.checked)}
+                type="file"
+                accept=".json,application/json"
+                className="block mt-1 text-sm"
+                disabled={importing}
+                onChange={(e) => setImportFileFr(e.target.files?.[0] || null)}
               />
-              {t('admin.replaceExisting')}
             </label>
+            <button
+              type="button"
+              onClick={onImportSeparate}
+              disabled={importing || (!importFileAr && !importFileFr)}
+              className="rounded-lg bg-brand text-white px-4 py-2 disabled:opacity-50 hover:bg-brand-dark transition"
+            >
+              {importing ? t('admin.importing') : t('admin.importSeparateBtn')}
+            </button>
           </div>
+          <label className="text-sm flex items-center gap-2 mt-3">
+            <input
+              type="checkbox"
+              checked={replaceOnImport}
+              onChange={(e) => setReplaceOnImport(e.target.checked)}
+            />
+            {t('admin.replaceExisting')}
+          </label>
         </div>
       )}
 
@@ -268,19 +311,27 @@ export default function AdminQuestions() {
               : t('admin.newQuestion', { n: questions.length })}
             {selectedQcm ? ` · ${selectedQcm.title}` : ''}
           </div>
-          <textarea
-            className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-24 content-auto"
-            placeholder={t('admin.questionText')}
-            value={form.text}
-            onChange={(e) => setForm({ ...form, text: e.target.value })}
-            dir={textDir(form.text) === 'rtl' || !form.text ? undefined : 'ltr'}
-            style={{ direction: form.text ? textDir(form.text) : undefined }}
-            required
-          />
+          <p className="text-xs text-muted -mb-1">{t('admin.bilingualHint')}</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <textarea
+              className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-24 content-auto"
+              placeholder={t('admin.questionTextFr')}
+              value={form.text_fr}
+              onChange={(e) => setForm({ ...form, text_fr: e.target.value })}
+              dir="ltr"
+            />
+            <textarea
+              className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-24 content-auto"
+              placeholder={t('admin.questionTextAr')}
+              value={form.text_ar}
+              onChange={(e) => setForm({ ...form, text_ar: e.target.value })}
+              dir="rtl"
+            />
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {form.choices.map((c) => (
-              <div key={c.label} className="rounded-lg border border-brand/15 p-3 bg-sand/30">
-                <div className="flex items-center justify-between mb-2">
+              <div key={c.label} className="rounded-lg border border-brand/15 p-3 bg-sand/30 space-y-2">
+                <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold" dir="ltr">
                     {c.label}
                   </span>
@@ -297,24 +348,37 @@ export default function AdminQuestions() {
                 </div>
                 <input
                   className="w-full rounded-md border border-brand/20 px-2 py-1.5 text-sm content-auto"
-                  placeholder={t('admin.choiceText', { label: c.label })}
-                  value={c.text}
-                  onChange={(e) => updateChoice(c.label, { text: e.target.value })}
-                  style={{ direction: c.text ? textDir(c.text) : undefined }}
-                  required
+                  placeholder={t('admin.choiceTextFr', { label: c.label })}
+                  value={c.text_fr}
+                  onChange={(e) => updateChoice(c.label, { text_fr: e.target.value })}
+                  dir="ltr"
+                />
+                <input
+                  className="w-full rounded-md border border-brand/20 px-2 py-1.5 text-sm content-auto"
+                  placeholder={t('admin.choiceTextAr', { label: c.label })}
+                  value={c.text_ar}
+                  onChange={(e) => updateChoice(c.label, { text_ar: e.target.value })}
+                  dir="rtl"
                 />
               </div>
             ))}
           </div>
-          <textarea
-            className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-16 content-auto"
-            placeholder={t('admin.explanation')}
-            value={form.explanation}
-            onChange={(e) => setForm({ ...form, explanation: e.target.value })}
-            style={{
-              direction: form.explanation ? textDir(form.explanation) : undefined,
-            }}
-          />
+          <div className="grid sm:grid-cols-2 gap-3">
+            <textarea
+              className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-16 content-auto"
+              placeholder={t('admin.explanationFr')}
+              value={form.explanation_fr}
+              onChange={(e) => setForm({ ...form, explanation_fr: e.target.value })}
+              dir="ltr"
+            />
+            <textarea
+              className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-16 content-auto"
+              placeholder={t('admin.explanationAr')}
+              value={form.explanation_ar}
+              onChange={(e) => setForm({ ...form, explanation_ar: e.target.value })}
+              dir="rtl"
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm">
               {t('admin.imageOptional')}

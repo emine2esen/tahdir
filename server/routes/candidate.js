@@ -1,24 +1,11 @@
 const express = require('express');
 const db = require('../db');
 const { authCandidate } = require('../auth');
+const { LEVEL_LABELS, pickLang, mapQuestion, mapChoice } = require('../locale');
 
 const router = express.Router();
 const requireCandidate = authCandidate(db);
 
-const LEVEL_LABELS = {
-  1: 'Facile',
-  2: 'Très facile',
-  3: 'Débutant',
-  4: 'Élémentaire',
-  5: 'Intermédiaire',
-  6: 'Confirmé',
-  7: 'Avancé',
-  8: 'Difficile',
-  9: 'Très difficile',
-  10: 'Expert',
-};
-
-// Catalogue public (nécessite session candidat)
 router.get('/catalog', requireCandidate, (req, res) => {
   const assignedProfilId = req.candidate.profilId;
 
@@ -35,9 +22,7 @@ router.get('/catalog', requireCandidate, (req, res) => {
       .all(assignedProfilId);
   } else {
     concours = db
-      .prepare(
-        `SELECT * FROM concours WHERE is_active = 1 ORDER BY year DESC, title`
-      )
+      .prepare(`SELECT * FROM concours WHERE is_active = 1 ORDER BY year DESC, title`)
       .all();
   }
 
@@ -81,12 +66,13 @@ router.get('/catalog', requireCandidate, (req, res) => {
   res.json({
     assignedProfilId,
     concours: result,
+    expiresAt: req.candidate.codeRow?.expires_at || null,
   });
 });
 
-// Détail QCM pour passage (réponses correctes incluses — scoring côté navigateur)
 router.get('/qcms/:id', requireCandidate, (req, res) => {
   const id = Number(req.params.id);
+  const lang = pickLang(req);
   const qcm = db
     .prepare(
       `SELECT q.*, p.title AS profil_title, p.id AS profil_id, c.title AS concours_title, c.id AS concours_id
@@ -105,13 +91,15 @@ router.get('/qcms/:id', requireCandidate, (req, res) => {
 
   const questions = db
     .prepare(
-      `SELECT id, order_num, text, image_url, explanation
+      `SELECT id, order_num, text, text_fr, text_ar, image_url,
+              explanation, explanation_fr, explanation_ar
        FROM questions WHERE qcm_id = ? ORDER BY order_num ASC`
     )
     .all(id);
 
   const getChoices = db.prepare(
-    `SELECT id, label, text, is_correct FROM choices WHERE question_id = ? ORDER BY label`
+    `SELECT id, label, text, text_fr, text_ar, is_correct
+     FROM choices WHERE question_id = ? ORDER BY label`
   );
 
   res.json({
@@ -122,18 +110,10 @@ router.get('/qcms/:id', requireCandidate, (req, res) => {
     duration_minutes: qcm.duration_minutes,
     profil_title: qcm.profil_title,
     concours_title: qcm.concours_title,
+    lang,
     questions: questions.map((q) => ({
-      id: q.id,
-      order_num: q.order_num,
-      text: q.text,
-      image_url: q.image_url,
-      explanation: q.explanation,
-      choices: getChoices.all(q.id).map((c) => ({
-        id: c.id,
-        label: c.label,
-        text: c.text,
-        is_correct: !!c.is_correct,
-      })),
+      ...mapQuestion(q, lang),
+      choices: getChoices.all(q.id).map((c) => mapChoice(c, lang)),
     })),
   });
 });

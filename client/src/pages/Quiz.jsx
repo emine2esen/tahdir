@@ -14,7 +14,7 @@ function formatTime(seconds) {
 export default function Quiz() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [qcm, setQcm] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,10 +28,12 @@ export default function Quiz() {
   answersRef.current = answers;
 
   useEffect(() => {
+    // Langue figée au démarrage : changer de langue en cours d'épreuve ne doit pas
+    // réinitialiser le chronomètre ni les réponses déjà données.
     let cancelled = false;
     (async () => {
       try {
-        const data = await api.getQcm(id);
+        const data = await api.getQcm(id, lang);
         if (cancelled) return;
         setQcm(data);
         setSecondsLeft(data.duration_minutes * 60);
@@ -50,6 +52,7 @@ export default function Quiz() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate]);
 
   function finish(currentAnswers = answersRef.current) {
@@ -293,6 +296,13 @@ export default function Quiz() {
               {t(`levels.${qcm.level}`)} · {t('quiz.multiHint')}
             </p>
             <p className="text-xs text-muted mb-3">{t('quiz.arabicNote')}</p>
+            {question.text_lang !== lang && (
+              <p className="text-xs text-gold bg-gold/10 border border-gold/30 rounded-lg px-3 py-1.5 mb-3 inline-block" dir="auto">
+                {question.text_lang === 'fr'
+                  ? t('quiz.langFallbackFr')
+                  : t('quiz.langFallbackAr')}
+              </p>
+            )}
             <h1
               className="font-display text-2xl md:text-3xl text-brand-dark mb-5 leading-snug content-auto"
               dir={textDir(question.text)}

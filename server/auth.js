@@ -4,8 +4,8 @@ const { v4: uuidv4 } = require('uuid');
 const JWT_SECRET = process.env.JWT_SECRET || 'tahdir-mauritanie-secret-change-me';
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'tahdir-admin-secret-change-me';
 
-function signCandidateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
+function signCandidateToken(payload, expiresIn = '7d') {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
 function signAdminToken(payload) {
@@ -24,6 +24,22 @@ function newJti() {
   return uuidv4();
 }
 
+function isCodeExpired(row) {
+  if (!row.expires_at) return false;
+  return new Date(row.expires_at).getTime() < Date.now();
+}
+
+function remainingJwtExpiry(row) {
+  if (!row.expires_at) {
+    const days = Number(row.duration_days) || 7;
+    return `${days}d`;
+  }
+  const ms = new Date(row.expires_at).getTime() - Date.now();
+  if (ms <= 0) return '1s';
+  const seconds = Math.max(60, Math.floor(ms / 1000));
+  return `${seconds}s`;
+}
+
 function authCandidate(db) {
   return (req, res, next) => {
     const header = req.headers.authorization || '';
@@ -40,6 +56,13 @@ function authCandidate(db) {
 
       if (!row || !row.is_used) {
         return res.status(401).json({ error: 'Session invalide' });
+      }
+
+      if (isCodeExpired(row)) {
+        return res.status(401).json({
+          error: 'Votre accès a expiré. Contactez le support pour un nouveau code.',
+          code: 'CODE_EXPIRED',
+        });
       }
 
       if (row.active_jti !== payload.jti) {
@@ -95,5 +118,7 @@ module.exports = {
   newJti,
   authCandidate,
   authAdmin,
+  isCodeExpired,
+  remainingJwtExpiry,
   JWT_SECRET,
 };

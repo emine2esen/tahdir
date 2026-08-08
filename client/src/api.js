@@ -86,7 +86,13 @@ export const api = {
   candidateMe: () => request('/api/auth/candidate/me'),
   candidateLogout: () => request('/api/auth/candidate/logout', { method: 'POST' }),
   catalog: () => request('/api/candidate/catalog'),
-  getQcm: (id) => request(`/api/candidate/qcms/${id}`),
+  getQcm: (id, lang = 'fr') =>
+    request(`/api/candidate/qcms/${id}?lang=${lang}`),
+
+  publicCatalog: () => request('/api/public/catalog'),
+  publicSimulation: (profilId, lang = 'fr') =>
+    request(`/api/public/simulation?profil_id=${profilId}&lang=${lang}&limit=5`),
+  publicContact: () => request('/api/public/contact'),
 
   adminLogin: (username, password) =>
     request('/api/auth/admin/login', {

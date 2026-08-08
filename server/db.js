@@ -61,9 +61,13 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     qcm_id INTEGER NOT NULL,
     order_num INTEGER NOT NULL,
-    text TEXT NOT NULL,
+    text TEXT NOT NULL DEFAULT '',
+    text_fr TEXT DEFAULT '',
+    text_ar TEXT DEFAULT '',
     image_url TEXT,
     explanation TEXT DEFAULT '',
+    explanation_fr TEXT DEFAULT '',
+    explanation_ar TEXT DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(qcm_id, order_num),
@@ -74,7 +78,9 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     question_id INTEGER NOT NULL,
     label TEXT NOT NULL CHECK(label IN ('A','B','C','D')),
-    text TEXT NOT NULL,
+    text TEXT NOT NULL DEFAULT '',
+    text_fr TEXT DEFAULT '',
+    text_ar TEXT DEFAULT '',
     is_correct INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
     UNIQUE(question_id, label)
@@ -85,13 +91,49 @@ db.exec(`
     code TEXT NOT NULL UNIQUE,
     label TEXT DEFAULT '',
     profil_id INTEGER,
+    duration_days INTEGER NOT NULL DEFAULT 7,
     is_used INTEGER NOT NULL DEFAULT 0,
     used_at TEXT,
+    expires_at TEXT,
     active_jti TEXT,
     active_device_id TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (profil_id) REFERENCES profils(id) ON DELETE SET NULL
   );
+`);
+
+function ensureColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+ensureColumn('access_codes', 'duration_days', 'INTEGER NOT NULL DEFAULT 7');
+ensureColumn('access_codes', 'expires_at', 'TEXT');
+ensureColumn('questions', 'text_fr', "TEXT DEFAULT ''");
+ensureColumn('questions', 'text_ar', "TEXT DEFAULT ''");
+ensureColumn('questions', 'explanation_fr', "TEXT DEFAULT ''");
+ensureColumn('questions', 'explanation_ar', "TEXT DEFAULT ''");
+ensureColumn('choices', 'text_fr', "TEXT DEFAULT ''");
+ensureColumn('choices', 'text_ar', "TEXT DEFAULT ''");
+
+// Migrer l'ancien contenu vers FR si besoin
+db.exec(`
+  UPDATE questions
+  SET text_fr = text
+  WHERE (text_fr IS NULL OR text_fr = '') AND text IS NOT NULL AND text != '';
+`);
+db.exec(`
+  UPDATE questions
+  SET explanation_fr = explanation
+  WHERE (explanation_fr IS NULL OR explanation_fr = '')
+    AND explanation IS NOT NULL AND explanation != '';
+`);
+db.exec(`
+  UPDATE choices
+  SET text_fr = text
+  WHERE (text_fr IS NULL OR text_fr = '') AND text IS NOT NULL AND text != '';
 `);
 
 function ensureDefaultAdmin() {
@@ -105,4 +147,23 @@ function ensureDefaultAdmin() {
 
 ensureDefaultAdmin();
 
+/** Helper: texte selon langue (fallback FR → AR → text) */
+function localized(row, field, lang) {
+  const fr = row[`${field}_fr`] || '';
+  const ar = row[`${field}_ar`] || '';
+  const base = row[field] || '';
+  if (lang === 'ar') return ar || fr || base;
+  return fr || base || ar;
+}
+
+/** Langue effectivement utilisée par localized() (pour signaler un repli au client) */
+function localizedLang(row, field, lang) {
+  const fr = row[`${field}_fr`] || row[field] || '';
+  const ar = row[`${field}_ar`] || '';
+  if (lang === 'ar') return ar ? 'ar' : 'fr';
+  return fr ? 'fr' : 'ar';
+}
+
+db.localized = localized;
+db.localizedLang = localizedLang;
 module.exports = db;
