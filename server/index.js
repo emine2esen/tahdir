@@ -10,7 +10,7 @@ const adminRoutes = require('./routes/admin');
 const candidateRoutes = require('./routes/candidate');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
