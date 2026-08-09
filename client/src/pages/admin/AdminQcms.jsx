@@ -16,9 +16,10 @@ export default function AdminQcms() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState('');
-  const [reassignId, setReassignId] = useState(null);
-  const [reassignForm, setReassignForm] = useState({ profil_id: '', level: 1 });
-  const [reassignError, setReassignError] = useState('');
+  const [duplicateId, setDuplicateId] = useState(null);
+  const [duplicateForm, setDuplicateForm] = useState({ profil_id: '', level: 1 });
+  const [duplicateError, setDuplicateError] = useState('');
+  const [duplicateSuccess, setDuplicateSuccess] = useState('');
 
   useEffect(() => {
     api.getProfils().then((p) => {
@@ -75,29 +76,30 @@ export default function AdminQcms() {
     setRows(await api.getQcms(profilId));
   }
 
-  function startReassign(row) {
+  function startDuplicate(row) {
     setEditId(null);
-    setReassignError('');
-    setReassignId(row.id);
+    setDuplicateError('');
+    setDuplicateSuccess('');
+    setDuplicateId(row.id);
     const other = profils.find((p) => String(p.id) !== String(row.profil_id));
-    setReassignForm({ profil_id: other ? String(other.id) : '', level: row.level });
+    setDuplicateForm({ profil_id: other ? String(other.id) : '', level: row.level });
   }
 
-  async function submitReassign(row) {
-    if (!reassignForm.profil_id) {
-      setReassignError('Choisissez un profil cible');
+  async function submitDuplicate(row) {
+    if (!duplicateForm.profil_id) {
+      setDuplicateError('Choisissez un profil cible');
       return;
     }
-    setReassignError('');
+    setDuplicateError('');
     try {
-      await api.updateQcm(row.id, {
-        profil_id: Number(reassignForm.profil_id),
-        level: Number(reassignForm.level),
+      await api.duplicateQcm(row.id, {
+        profil_id: Number(duplicateForm.profil_id),
+        level: Number(duplicateForm.level),
       });
-      setReassignId(null);
-      setRows(await api.getQcms(profilId));
+      setDuplicateId(null);
+      setDuplicateSuccess('QCM dupliqué avec succès.');
     } catch (err) {
-      setReassignError(err.message);
+      setDuplicateError(err.message);
     }
   }
 
@@ -106,6 +108,11 @@ export default function AdminQcms() {
       <h1 className="font-display text-3xl text-brand-dark mb-2">QCM</h1>
       <p className="text-muted mb-6">Maximum 10 QCM par profil (niveaux 1 à 10).</p>
       {error && <p className="text-red-700 mb-4">{error}</p>}
+      {duplicateSuccess && (
+        <p className="text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 mb-4 text-sm">
+          {duplicateSuccess}
+        </p>
+      )}
 
       <select
         className="rounded-lg border border-brand/20 px-3 py-2 bg-white mb-4"
@@ -205,10 +212,10 @@ export default function AdminQcms() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => startReassign(row)}
+                  onClick={() => startDuplicate(row)}
                   className="text-sm border border-brand/30 text-brand rounded-lg px-3 py-1.5"
                 >
-                  Réaffecter
+                  Dupliquer vers un autre profil
                 </button>
                 <button
                   type="button"
@@ -220,15 +227,19 @@ export default function AdminQcms() {
               </div>
             </div>
 
-            {reassignId === row.id && (
+            {duplicateId === row.id && (
               <div className="mt-3 pt-3 border-t border-brand/10 flex flex-wrap items-end gap-3">
+                <p className="text-xs text-muted w-full">
+                  Crée une copie indépendante de ce QCM (et de ses questions) dans un
+                  autre profil. Le QCM d'origine n'est pas modifié.
+                </p>
                 <label className="text-sm">
                   Profil cible
                   <select
                     className="mt-1 rounded-lg border border-brand/20 px-3 py-2 bg-white"
-                    value={reassignForm.profil_id}
+                    value={duplicateForm.profil_id}
                     onChange={(e) =>
-                      setReassignForm({ ...reassignForm, profil_id: e.target.value })
+                      setDuplicateForm({ ...duplicateForm, profil_id: e.target.value })
                     }
                   >
                     <option value="">Choisir un profil</option>
@@ -248,28 +259,28 @@ export default function AdminQcms() {
                     min={1}
                     max={10}
                     className="mt-1 w-24 rounded-lg border border-brand/20 px-3 py-2"
-                    value={reassignForm.level}
+                    value={duplicateForm.level}
                     onChange={(e) =>
-                      setReassignForm({ ...reassignForm, level: e.target.value })
+                      setDuplicateForm({ ...duplicateForm, level: e.target.value })
                     }
                   />
                 </label>
                 <button
                   type="button"
-                  onClick={() => submitReassign(row)}
+                  onClick={() => submitDuplicate(row)}
                   className="rounded-lg bg-brand text-white px-4 py-2 text-sm"
                 >
-                  Confirmer le transfert
+                  Confirmer la copie
                 </button>
                 <button
                   type="button"
-                  onClick={() => setReassignId(null)}
+                  onClick={() => setDuplicateId(null)}
                   className="rounded-lg border px-4 py-2 text-sm"
                 >
                   Annuler
                 </button>
-                {reassignError && (
-                  <p className="text-red-700 text-sm w-full">{reassignError}</p>
+                {duplicateError && (
+                  <p className="text-red-700 text-sm w-full">{duplicateError}</p>
                 )}
               </div>
             )}

@@ -238,34 +238,15 @@ router.put('/qcms/:id', requireAdmin, (req, res) => {
   const duration_minutes = req.body.duration_minutes ?? existing.duration_minutes;
   const is_active =
     req.body.is_active !== undefined ? (req.body.is_active ? 1 : 0) : existing.is_active;
-  const profil_id = req.body.profil_id ? Number(req.body.profil_id) : existing.profil_id;
-
-  const lvl = Number(level);
-  if (lvl < 1 || lvl > 10) {
-    return res.status(400).json({ error: 'Le niveau doit être entre 1 et 10' });
-  }
-
-  if (profil_id !== existing.profil_id) {
-    const targetProfil = db.prepare('SELECT id FROM profils WHERE id = ?').get(profil_id);
-    if (!targetProfil) {
-      return res.status(404).json({ error: 'Profil cible introuvable' });
-    }
-    const targetCount = db
-      .prepare('SELECT COUNT(*) AS c FROM qcms WHERE profil_id = ?')
-      .get(profil_id).c;
-    if (targetCount >= 10) {
-      return res.status(400).json({ error: 'Le profil cible a déjà 10 QCM (maximum)' });
-    }
-  }
 
   try {
     db.prepare(
-      `UPDATE qcms SET profil_id = ?, title = ?, level = ?, duration_minutes = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(profil_id, title, lvl, Number(duration_minutes), is_active, id);
+      `UPDATE qcms SET title = ?, level = ?, duration_minutes = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?`
+    ).run(title, Number(level), Number(duration_minutes), is_active, id);
     res.json(db.prepare('SELECT * FROM qcms WHERE id = ?').get(id));
   } catch (e) {
     if (String(e.message).includes('UNIQUE')) {
-      return res.status(400).json({ error: 'Ce niveau existe déjà pour ce profil cible' });
+      return res.status(400).json({ error: 'Ce niveau existe déjà pour ce profil' });
     }
     throw e;
   }
@@ -276,6 +257,96 @@ router.delete('/qcms/:id', requireAdmin, (req, res) => {
   const result = db.prepare('DELETE FROM qcms WHERE id = ?').run(id);
   if (!result.changes) return res.status(404).json({ error: 'QCM introuvable' });
   res.json({ ok: true });
+});
+
+/**
+ * Duplique un QCM (et toutes ses questions/choix) vers un autre profil, à un
+ * niveau donné. Le QCM d'origine n'est pas modifié : les deux deviennent
+ * indépendants après la copie.
+ */
+router.post('/qcms/:id/duplicate', requireAdmin, (req, res) => {
+  const sourceId = Number(req.params.id);
+  const source = db.prepare('SELECT * FROM qcms WHERE id = ?').get(sourceId);
+  if (!source) return res.status(404).json({ error: 'QCM introuvable' });
+
+  const targetProfilId = Number(req.body?.profil_id);
+  const level = Number(req.body?.level);
+  if (!targetProfilId || !level) {
+    return res.status(400).json({ error: 'profil_id et level requis' });
+  }
+  if (level < 1 || level > 10) {
+    return res.status(400).json({ error: 'Le niveau doit être entre 1 et 10' });
+  }
+
+  const targetProfil = db.prepare('SELECT id FROM profils WHERE id = ?').get(targetProfilId);
+  if (!targetProfil) {
+    return res.status(404).json({ error: 'Profil cible introuvable' });
+  }
+  const targetCount = db
+    .prepare('SELECT COUNT(*) AS c FROM qcms WHERE profil_id = ?')
+    .get(targetProfilId).c;
+  if (targetCount >= 10) {
+    return res.status(400).json({ error: 'Le profil cible a déjà 10 QCM (maximum)' });
+  }
+
+  const questions = db
+    .prepare('SELECT * FROM questions WHERE qcm_id = ? ORDER BY order_num ASC')
+    .all(sourceId);
+  const getChoices = db.prepare('SELECT * FROM choices WHERE question_id = ? ORDER BY label');
+
+  const insertQcm = db.prepare(
+    `INSERT INTO qcms (profil_id, title, level, duration_minutes, is_active)
+     VALUES (?, ?, ?, ?, ?)`
+  );
+  const insertQuestion = db.prepare(
+    `INSERT INTO questions (
+      qcm_id, order_num, text, text_fr, text_ar, image_url,
+      explanation, explanation_fr, explanation_ar
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const insertChoice = db.prepare(
+    `INSERT INTO choices (question_id, label, text, text_fr, text_ar, is_correct)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  );
+
+  const tx = db.transaction(() => {
+    const result = insertQcm.run(
+      targetProfilId,
+      source.title,
+      level,
+      source.duration_minutes,
+      source.is_active
+    );
+    const newQcmId = result.lastInsertRowid;
+
+    for (const q of questions) {
+      const qResult = insertQuestion.run(
+        newQcmId,
+        q.order_num,
+        q.text,
+        q.text_fr,
+        q.text_ar,
+        q.image_url,
+        q.explanation,
+        q.explanation_fr,
+        q.explanation_ar
+      );
+      for (const c of getChoices.all(q.id)) {
+        insertChoice.run(qResult.lastInsertRowid, c.label, c.text, c.text_fr, c.text_ar, c.is_correct);
+      }
+    }
+    return newQcmId;
+  });
+
+  try {
+    const newQcmId = tx();
+    res.status(201).json(db.prepare('SELECT * FROM qcms WHERE id = ?').get(newQcmId));
+  } catch (e) {
+    if (String(e.message).includes('UNIQUE')) {
+      return res.status(400).json({ error: 'Ce niveau existe déjà pour ce profil cible' });
+    }
+    throw e;
+  }
 });
 
 // --- Questions ---

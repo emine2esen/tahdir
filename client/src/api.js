@@ -131,6 +131,8 @@ export const api = {
     request(`/api/admin/qcms/${id}`, { method: 'PUT', body, admin: true }),
   deleteQcm: (id) =>
     request(`/api/admin/qcms/${id}`, { method: 'DELETE', admin: true }),
+  duplicateQcm: (id, body) =>
+    request(`/api/admin/qcms/${id}/duplicate`, { method: 'POST', body, admin: true }),
 
   getQuestions: (qcmId) =>
     request(`/api/admin/qcms/${qcmId}/questions`, { admin: true }),
