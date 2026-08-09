@@ -14,7 +14,7 @@ export default function AdminProfils() {
   async function load(concoursId = filter) {
     const [c, p] = await Promise.all([
       api.getConcours(),
-      api.getProfils(concoursId || undefined),
+      api.getProfils(concoursId || undefined, { all: true }),
     ]);
     setConcours(c);
     setRows(p);
@@ -145,7 +145,14 @@ export default function AdminProfils() {
             className="rounded-xl border border-brand/10 bg-white/60 p-4 flex flex-wrap justify-between gap-3"
           >
             <div>
-              <div className="font-semibold">{row.title}</div>
+              <div className="font-semibold flex items-center gap-2">
+                {row.title}
+                {!row.is_active && (
+                  <span className="text-xs font-normal text-red-700 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+                    Inactif
+                  </span>
+                )}
+              </div>
               <div className="text-sm text-muted">
                 {row.concours_title} · {row.qcms_count}/10 QCM
               </div>

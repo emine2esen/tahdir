@@ -110,11 +110,13 @@ export const api = {
   deleteConcours: (id) =>
     request(`/api/admin/concours/${id}`, { method: 'DELETE', admin: true }),
 
-  getProfils: (concoursId) =>
-    request(
-      concoursId ? `/api/admin/profils?concours_id=${concoursId}` : '/api/admin/profils',
-      { admin: true }
-    ),
+  getProfils: (concoursId, { all = false } = {}) => {
+    const params = new URLSearchParams();
+    if (concoursId) params.set('concours_id', concoursId);
+    if (all) params.set('all', '1');
+    const qs = params.toString();
+    return request(`/api/admin/profils${qs ? `?${qs}` : ''}`, { admin: true });
+  },
   createProfil: (body) =>
     request('/api/admin/profils', { method: 'POST', body, admin: true }),
   updateProfil: (id, body) =>

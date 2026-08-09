@@ -81,8 +81,13 @@ router.delete('/concours/:id', requireAdmin, (req, res) => {
 });
 
 // --- Profils ---
+// Par défaut, seuls les profils actifs sont renvoyés (utilisé par les sélecteurs
+// de profil ailleurs dans l'admin : QCM, questions, codes). Passer ?all=1 pour
+// obtenir aussi les profils désactivés (utilisé par la page de gestion des profils).
 router.get('/profils', requireAdmin, (req, res) => {
   const concoursId = req.query.concours_id;
+  const includeInactive = req.query.all === '1' || req.query.all === 'true';
+  const activeClause = includeInactive ? '' : 'AND p.is_active = 1';
   let rows;
   if (concoursId) {
     rows = db
@@ -91,7 +96,7 @@ router.get('/profils', requireAdmin, (req, res) => {
           (SELECT COUNT(*) FROM qcms q WHERE q.profil_id = p.id) AS qcms_count
          FROM profils p
          JOIN concours c ON c.id = p.concours_id
-         WHERE p.concours_id = ?
+         WHERE p.concours_id = ? ${activeClause}
          ORDER BY p.title`
       )
       .all(Number(concoursId));
@@ -102,6 +107,7 @@ router.get('/profils', requireAdmin, (req, res) => {
           (SELECT COUNT(*) FROM qcms q WHERE q.profil_id = p.id) AS qcms_count
          FROM profils p
          JOIN concours c ON c.id = p.concours_id
+         WHERE 1 = 1 ${activeClause}
          ORDER BY c.title, p.title`
       )
       .all();

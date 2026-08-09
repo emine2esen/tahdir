@@ -8,7 +8,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     Promise.all([
       api.getConcours(),
-      api.getProfils(),
+      api.getProfils(undefined, { all: true }),
       api.getCodes(),
     ]).then(([concours, profils, codes]) => {
       setStats({
