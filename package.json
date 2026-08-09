@@ -9,7 +9,8 @@
     "dev:client": "npm run dev --prefix client",
     "build": "npm run build --prefix client",
     "start": "node server/index.js",
-    "seed": "node server/seed.js"
+    "seed": "node server/seed.js",
+    "admin:set": "node server/set-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
