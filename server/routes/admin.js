@@ -405,12 +405,13 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
 
   const primaryText = text_fr || text_ar;
   const primaryExpl = explanation_fr || explanation_ar;
+  const is_simulation = body.is_simulation ? 1 : 0;
 
   const insertQ = db.prepare(
     `INSERT INTO questions (
       qcm_id, order_num, text, text_fr, text_ar, image_url,
-      explanation, explanation_fr, explanation_ar
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      explanation, explanation_fr, explanation_ar, is_simulation
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertC = db.prepare(
     `INSERT INTO choices (question_id, label, text, text_fr, text_ar, is_correct)
@@ -427,7 +428,8 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
       image_url,
       primaryExpl,
       explanation_fr,
-      explanation_ar
+      explanation_ar,
+      is_simulation
     );
     const qid = result.lastInsertRowid;
     for (const c of choices) {
@@ -768,6 +770,8 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
   const choices = req.body.choices;
   const primaryText = text_fr || text_ar;
   const primaryExpl = explanation_fr || explanation_ar;
+  const is_simulation =
+    req.body.is_simulation !== undefined ? (req.body.is_simulation ? 1 : 0) : existing.is_simulation;
 
   if (!primaryText) {
     return res.status(400).json({ error: 'Texte FR ou AR requis' });
@@ -778,7 +782,7 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
       `UPDATE questions SET
         text = ?, text_fr = ?, text_ar = ?,
         explanation = ?, explanation_fr = ?, explanation_ar = ?,
-        image_url = ?, order_num = ?, updated_at = datetime('now')
+        image_url = ?, order_num = ?, is_simulation = ?, updated_at = datetime('now')
        WHERE id = ?`
     ).run(
       primaryText,
@@ -789,6 +793,7 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
       explanation_ar,
       image_url,
       order_num,
+      is_simulation,
       id
     );
 

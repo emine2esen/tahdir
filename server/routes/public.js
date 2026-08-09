@@ -33,8 +33,11 @@ router.get('/catalog', (_req, res) => {
 });
 
 /**
- * Simulation : les {limit} premières questions (ordre fixe, non aléatoire) du premier
- * QCM actif (niveau le plus bas) d'un profil. Scoring côté navigateur — aucune session.
+ * Simulation : {limit} questions (ordre fixe, non aléatoire) pour un profil.
+ * Priorité aux questions cochées "simulation" par l'admin (toutes QCM actifs
+ * confondus, triées par niveau puis ordre). À défaut (aucune question cochée
+ * pour ce profil), repli sur les {limit} premières questions du premier QCM
+ * actif (niveau le plus bas). Scoring côté navigateur — aucune session.
  */
 router.get('/simulation', (req, res) => {
   const profilId = Number(req.query.profil_id);
@@ -58,24 +61,38 @@ router.get('/simulation', (req, res) => {
     return res.status(404).json({ error: 'Profil introuvable' });
   }
 
-  const firstQcm = db
+  let questions = db
     .prepare(
-      `SELECT id FROM qcms WHERE profil_id = ? AND is_active = 1 ORDER BY level ASC LIMIT 1`
+      `SELECT q.id, q.order_num, q.text, q.text_fr, q.text_ar, q.image_url,
+              q.explanation, q.explanation_fr, q.explanation_ar, q.qcm_id
+       FROM questions q
+       JOIN qcms qc ON qc.id = q.qcm_id
+       WHERE qc.profil_id = ? AND qc.is_active = 1 AND q.is_simulation = 1
+       ORDER BY qc.level ASC, q.order_num ASC
+       LIMIT ?`
     )
-    .get(profilId);
+    .all(profilId, limit);
 
-  const questions = firstQcm
-    ? db
-        .prepare(
-          `SELECT id, order_num, text, text_fr, text_ar, image_url,
-                  explanation, explanation_fr, explanation_ar, qcm_id
-           FROM questions
-           WHERE qcm_id = ?
-           ORDER BY order_num ASC
-           LIMIT ?`
-        )
-        .all(firstQcm.id, limit)
-    : [];
+  if (!questions.length) {
+    const firstQcm = db
+      .prepare(
+        `SELECT id FROM qcms WHERE profil_id = ? AND is_active = 1 ORDER BY level ASC LIMIT 1`
+      )
+      .get(profilId);
+
+    questions = firstQcm
+      ? db
+          .prepare(
+            `SELECT id, order_num, text, text_fr, text_ar, image_url,
+                    explanation, explanation_fr, explanation_ar, qcm_id
+             FROM questions
+             WHERE qcm_id = ?
+             ORDER BY order_num ASC
+             LIMIT ?`
+          )
+          .all(firstQcm.id, limit)
+      : [];
+  }
 
   const getChoices = db.prepare(
     `SELECT id, label, text, text_fr, text_ar, is_correct

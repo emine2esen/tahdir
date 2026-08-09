@@ -115,6 +115,7 @@ ensureColumn('questions', 'text_fr', "TEXT DEFAULT ''");
 ensureColumn('questions', 'text_ar', "TEXT DEFAULT ''");
 ensureColumn('questions', 'explanation_fr', "TEXT DEFAULT ''");
 ensureColumn('questions', 'explanation_ar', "TEXT DEFAULT ''");
+ensureColumn('questions', 'is_simulation', 'INTEGER NOT NULL DEFAULT 0');
 ensureColumn('choices', 'text_fr', "TEXT DEFAULT ''");
 ensureColumn('choices', 'text_ar', "TEXT DEFAULT ''");
 

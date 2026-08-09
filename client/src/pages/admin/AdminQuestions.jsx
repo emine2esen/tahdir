@@ -22,6 +22,7 @@ const emptyQuestion = {
   explanation_fr: '',
   explanation_ar: '',
   image_url: '',
+  is_simulation: false,
   choices: blankChoices(),
 };
 
@@ -126,6 +127,7 @@ export default function AdminQuestions() {
         explanation_fr: form.explanation_fr,
         explanation_ar: form.explanation_ar,
         image_url: form.image_url || null,
+        is_simulation: form.is_simulation,
         choices: form.choices,
       };
       if (editId) await api.updateQuestion(editId, payload);
@@ -146,6 +148,7 @@ export default function AdminQuestions() {
       explanation_fr: q.explanation_fr || q.explanation || '',
       explanation_ar: q.explanation_ar || '',
       image_url: q.image_url || '',
+      is_simulation: !!q.is_simulation,
       choices: q.choices.map((c) => ({
         label: c.label,
         text_fr: c.text_fr || c.text || '',
@@ -162,6 +165,17 @@ export default function AdminQuestions() {
     setQuestions(await api.getQuestions(qcmId));
     const list = await api.getQcms(profilId);
     setQcms(list);
+  }
+
+  async function toggleSimulation(q) {
+    try {
+      await api.updateQuestion(q.id, { is_simulation: !q.is_simulation });
+      setQuestions((qs) =>
+        qs.map((x) => (x.id === q.id ? { ...x, is_simulation: !x.is_simulation } : x))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   async function refreshQuestions() {
@@ -440,6 +454,14 @@ export default function AdminQuestions() {
               <img src={form.image_url} alt="" className="h-16 rounded-md border" />
             )}
           </div>
+          <label className="text-sm flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.is_simulation}
+              onChange={(e) => setForm({ ...form, is_simulation: e.target.checked })}
+            />
+            {t('admin.simulation')}
+          </label>
           <div className="flex gap-2">
             <button type="submit" className="rounded-lg bg-brand text-white px-4 py-2">
               {editId ? t('admin.save') : t('admin.addQuestion')}
@@ -473,7 +495,15 @@ export default function AdminQuestions() {
               >
                 #{q.order_num}. {q.text}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                <label className="text-xs flex items-center gap-1.5 text-muted">
+                  <input
+                    type="checkbox"
+                    checked={!!q.is_simulation}
+                    onChange={() => toggleSimulation(q)}
+                  />
+                  {t('admin.simulation')}
+                </label>
                 <button
                   type="button"
                   onClick={() => startEdit(q)}
