@@ -96,6 +96,9 @@ export default function Home() {
             <p className="animate-fade-up-delay-2 text-xs text-muted mt-4 max-w-md mx-auto">
               {t('home.requestCodeNotice')}
             </p>
+            <p className="animate-fade-up-delay-2 text-xs text-gold bg-gold/10 border border-gold/25 rounded-lg px-4 py-2.5 mt-4 max-w-lg mx-auto">
+              {t('home.availabilityNotice')}
+            </p>
           </div>
         </section>
 

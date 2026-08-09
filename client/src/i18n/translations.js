@@ -49,6 +49,8 @@ export const translations = {
       requestCode: 'Demander un code',
       requestCodeNotice:
         "Le code d'accès vous est fourni par téléphone ou sur WhatsApp au 36949445.",
+      availabilityNotice:
+        "Certains recrutements ou profils peuvent ne pas être disponibles pour le moment, mais notre équipe travaille activement à compléter l'ensemble des profils et concours.",
     },
     dev: {
       label: 'Développeur',
@@ -244,6 +246,8 @@ export const translations = {
       footer: 'تَحضير — التحضير للمسابقات · موريتانيا',
       requestCode: 'طلب رمز',
       requestCodeNotice: 'يُسلَّم لك رمز الدخول عبر الهاتف أو واتساب على الرقم 36949445.',
+      availabilityNotice:
+        'قد لا تكون بعض المسابقات أو الشُّعب متاحة حالياً، لكن فريقنا يعمل باستمرار على استكمال جميع الشُّعب والمسابقات.',
     },
     dev: {
       label: 'المطوّر',
