@@ -77,7 +77,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS choices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     question_id INTEGER NOT NULL,
-    label TEXT NOT NULL CHECK(label IN ('A','B','C','D')),
+    label TEXT NOT NULL CHECK(label IN ('A','B','C','D','E','F')),
     text TEXT NOT NULL DEFAULT '',
     text_fr TEXT DEFAULT '',
     text_ar TEXT DEFAULT '',
@@ -117,6 +117,44 @@ ensureColumn('questions', 'explanation_fr', "TEXT DEFAULT ''");
 ensureColumn('questions', 'explanation_ar', "TEXT DEFAULT ''");
 ensureColumn('choices', 'text_fr', "TEXT DEFAULT ''");
 ensureColumn('choices', 'text_ar', "TEXT DEFAULT ''");
+
+/**
+ * Anciennes bases : la table choices limitait les labels à A-D via une contrainte
+ * CHECK. SQLite ne permet pas de modifier une CHECK existante avec ALTER TABLE,
+ * donc on recrée la table (copie des données) pour autoriser jusqu'à 6 choix (A-F).
+ */
+function ensureChoiceLabelRange() {
+  const row = db
+    .prepare(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'choices'`)
+    .get();
+  if (!row || row.sql.includes("'E'")) return;
+
+  db.pragma('foreign_keys = OFF');
+  const tx = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE choices_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question_id INTEGER NOT NULL,
+        label TEXT NOT NULL CHECK(label IN ('A','B','C','D','E','F')),
+        text TEXT NOT NULL DEFAULT '',
+        text_fr TEXT DEFAULT '',
+        text_ar TEXT DEFAULT '',
+        is_correct INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+        UNIQUE(question_id, label)
+      );
+      INSERT INTO choices_new (id, question_id, label, text, text_fr, text_ar, is_correct)
+        SELECT id, question_id, label, text, text_fr, text_ar, is_correct FROM choices;
+      DROP TABLE choices;
+      ALTER TABLE choices_new RENAME TO choices;
+    `);
+  });
+  tx();
+  db.pragma('foreign_keys = ON');
+  console.log('Migration : la table choices accepte désormais jusqu\'à 6 choix (A-F).');
+}
+
+ensureChoiceLabelRange();
 
 // Migrer l'ancien contenu vers FR si besoin
 db.exec(`

@@ -8,6 +8,27 @@ const { authAdmin } = require('../auth');
 const router = express.Router();
 const requireAdmin = authAdmin(db);
 
+const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const MIN_CHOICES = 2;
+const MAX_CHOICES = CHOICE_LABELS.length;
+
+/** Valide une liste de choix déjà normalisée (label, is_correct) : nombre, labels, bonne réponse. */
+function choicesValidationError(choices) {
+  if (!Array.isArray(choices) || choices.length < MIN_CHOICES || choices.length > MAX_CHOICES) {
+    return `Chaque question doit avoir entre ${MIN_CHOICES} et ${MAX_CHOICES} choix (${CHOICE_LABELS.join(', ')})`;
+  }
+  const expected = CHOICE_LABELS.slice(0, choices.length);
+  const labels = choices.map((c) => String(c.label || '').toUpperCase());
+  const uniqueLabels = new Set(labels);
+  if (uniqueLabels.size !== labels.length || !expected.every((l) => uniqueLabels.has(l))) {
+    return `Les labels de choix doivent être exactement ${expected.join(', ')}, sans doublon`;
+  }
+  if (!choices.some((c) => c.is_correct)) {
+    return 'Au moins une bonne réponse est requise';
+  }
+  return null;
+}
+
 const storage = multer.diskStorage({
   destination: path.join(__dirname, '..', 'uploads'),
   filename: (_req, file, cb) => {
@@ -286,16 +307,9 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
   if (!text_fr && !text_ar) {
     return res.status(400).json({ error: 'Texte FR ou AR de la question requis' });
   }
-  if (!Array.isArray(choices) || choices.length !== 4) {
-    return res.status(400).json({ error: 'Exactement 4 choix (A,B,C,D) requis' });
-  }
-
-  const labels = choices.map((c) => c.label);
-  if (!['A', 'B', 'C', 'D'].every((l) => labels.includes(l))) {
-    return res.status(400).json({ error: 'Les labels A,B,C,D sont obligatoires' });
-  }
-  if (!choices.some((c) => c.is_correct)) {
-    return res.status(400).json({ error: 'Au moins une bonne réponse est requise' });
+  const choicesError = choicesValidationError(choices);
+  if (choicesError) {
+    return res.status(400).json({ error: choicesError });
   }
 
   const nextOrder =
@@ -351,15 +365,18 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
 });
 
 function normalizeImportChoices(choices) {
-  if (!Array.isArray(choices) || choices.length !== 4) {
-    throw new Error('Chaque question doit avoir exactement 4 choix (A,B,C,D)');
+  if (!Array.isArray(choices) || choices.length < MIN_CHOICES || choices.length > MAX_CHOICES) {
+    throw new Error(
+      `Chaque question doit avoir entre ${MIN_CHOICES} et ${MAX_CHOICES} choix (${CHOICE_LABELS.join(', ')})`
+    );
   }
 
+  const expected = CHOICE_LABELS.slice(0, choices.length);
   const byLabel = {};
   for (const c of choices) {
     const label = String(c.label || c.lettre || '').toUpperCase();
-    if (!['A', 'B', 'C', 'D'].includes(label)) {
-      throw new Error('Les labels de choix doivent être A, B, C ou D');
+    if (!expected.includes(label)) {
+      throw new Error(`Les labels de choix doivent être ${expected.join(', ')}`);
     }
     const text_fr = String(c.text_fr ?? c.text ?? c.texte ?? '').trim();
     const text_ar = String(c.text_ar ?? c.texte_ar ?? '').trim();
@@ -372,14 +389,14 @@ function normalizeImportChoices(choices) {
     };
   }
 
-  if (!['A', 'B', 'C', 'D'].every((l) => byLabel[l])) {
-    throw new Error('Les labels A, B, C et D sont obligatoires');
+  if (!expected.every((l) => byLabel[l])) {
+    throw new Error(`Les labels ${expected.join(', ')} sont obligatoires, sans doublon`);
   }
-  if (!['A', 'B', 'C', 'D'].some((l) => byLabel[l].is_correct)) {
+  if (!expected.some((l) => byLabel[l].is_correct)) {
     throw new Error('Au moins une bonne réponse est requise par question');
   }
 
-  return ['A', 'B', 'C', 'D'].map((l) => byLabel[l]);
+  return expected.map((l) => byLabel[l]);
 }
 
 function normalizeImportQuestion(raw, index) {
@@ -392,19 +409,22 @@ function normalizeImportQuestion(raw, index) {
   }
 
   let choices = raw.choices ?? raw.choix;
-  if (!choices && (raw.A || raw.B || raw.C || raw.D)) {
-    const correct = new Set(
-      []
-        .concat(raw.correct || raw.correctes || raw.bonnes_reponses || [])
-        .map((x) => String(x).toUpperCase())
-    );
-    if (raw.bonne_reponse) correct.add(String(raw.bonne_reponse).toUpperCase());
-    choices = ['A', 'B', 'C', 'D'].map((label) => ({
-      label,
-      text_fr: raw[label] || '',
-      text_ar: raw[`${label}_ar`] || '',
-      is_correct: correct.has(label),
-    }));
+  if (!choices) {
+    const shorthandLabels = CHOICE_LABELS.filter((l) => raw[l] !== undefined);
+    if (shorthandLabels.length) {
+      const correct = new Set(
+        []
+          .concat(raw.correct || raw.correctes || raw.bonnes_reponses || [])
+          .map((x) => String(x).toUpperCase())
+      );
+      if (raw.bonne_reponse) correct.add(String(raw.bonne_reponse).toUpperCase());
+      choices = shorthandLabels.map((label) => ({
+        label,
+        text_fr: raw[label] || '',
+        text_ar: raw[`${label}_ar`] || '',
+        is_correct: correct.has(label),
+      }));
+    }
   }
 
   try {
@@ -437,31 +457,35 @@ function normalizeImportQuestionMonolingual(raw, index, langLabel) {
   if (!text) return null;
 
   let choices = raw.choices ?? raw.choix;
-  if (!choices && (raw.A || raw.B || raw.C || raw.D)) {
-    const correct = new Set(
-      []
-        .concat(raw.correct || raw.correctes || raw.bonnes_reponses || [])
-        .map((x) => String(x).toUpperCase())
-    );
-    if (raw.bonne_reponse) correct.add(String(raw.bonne_reponse).toUpperCase());
-    choices = ['A', 'B', 'C', 'D'].map((label) => ({
-      label,
-      text: raw[label] || '',
-      is_correct: correct.has(label),
-    }));
+  if (!choices) {
+    const shorthandLabels = CHOICE_LABELS.filter((l) => raw[l] !== undefined);
+    if (shorthandLabels.length) {
+      const correct = new Set(
+        []
+          .concat(raw.correct || raw.correctes || raw.bonnes_reponses || [])
+          .map((x) => String(x).toUpperCase())
+      );
+      if (raw.bonne_reponse) correct.add(String(raw.bonne_reponse).toUpperCase());
+      choices = shorthandLabels.map((label) => ({
+        label,
+        text: raw[label] || '',
+        is_correct: correct.has(label),
+      }));
+    }
   }
 
-  if (!Array.isArray(choices) || choices.length !== 4) {
+  if (!Array.isArray(choices) || choices.length < MIN_CHOICES || choices.length > MAX_CHOICES) {
     throw new Error(
-      `Question #${index + 1} (${langLabel}) : chaque question doit avoir exactement 4 choix (A,B,C,D)`
+      `Question #${index + 1} (${langLabel}) : chaque question doit avoir entre ${MIN_CHOICES} et ${MAX_CHOICES} choix (${CHOICE_LABELS.join(', ')})`
     );
   }
 
+  const expected = CHOICE_LABELS.slice(0, choices.length);
   const byLabel = {};
   for (const c of choices) {
     const label = String(c.label || c.lettre || '').toUpperCase();
-    if (!['A', 'B', 'C', 'D'].includes(label)) {
-      throw new Error(`Question #${index + 1} (${langLabel}) : les labels de choix doivent être A, B, C ou D`);
+    if (!expected.includes(label)) {
+      throw new Error(`Question #${index + 1} (${langLabel}) : les labels de choix doivent être ${expected.join(', ')}`);
     }
     byLabel[label] = {
       label,
@@ -469,10 +493,10 @@ function normalizeImportQuestionMonolingual(raw, index, langLabel) {
       is_correct: !!(c.is_correct ?? c.correcte ?? c.correct),
     };
   }
-  if (!['A', 'B', 'C', 'D'].every((l) => byLabel[l])) {
-    throw new Error(`Question #${index + 1} (${langLabel}) : les labels A, B, C et D sont obligatoires`);
+  if (!expected.every((l) => byLabel[l])) {
+    throw new Error(`Question #${index + 1} (${langLabel}) : les labels ${expected.join(', ')} sont obligatoires, sans doublon`);
   }
-  if (!['A', 'B', 'C', 'D'].some((l) => byLabel[l].is_correct)) {
+  if (!expected.some((l) => byLabel[l].is_correct)) {
     throw new Error(`Question #${index + 1} (${langLabel}) : au moins une bonne réponse est requise`);
   }
 
@@ -480,7 +504,7 @@ function normalizeImportQuestionMonolingual(raw, index, langLabel) {
     text,
     explanation: String(raw.explanation ?? raw.explication ?? '').trim(),
     image_url: raw.image_url || raw.image || null,
-    choices: ['A', 'B', 'C', 'D'].map((l) => byLabel[l]),
+    choices: expected.map((l) => byLabel[l]),
   };
 }
 
@@ -497,7 +521,13 @@ function mergeBilingualQuestions(arList, frList) {
     const fr = frList[i] || null;
     if (!ar && !fr) continue;
 
-    const choices = ['A', 'B', 'C', 'D'].map((label) => {
+    const labelSet = new Set([
+      ...(ar?.choices || []).map((c) => c.label),
+      ...(fr?.choices || []).map((c) => c.label),
+    ]);
+    const labels = CHOICE_LABELS.filter((l) => labelSet.has(l));
+
+    const choices = labels.map((label) => {
       const arC = ar?.choices.find((c) => c.label === label);
       const frC = fr?.choices.find((c) => c.label === label);
       return {
@@ -687,9 +717,10 @@ router.put('/questions/:id', requireAdmin, (req, res) => {
       id
     );
 
-    if (Array.isArray(choices) && choices.length === 4) {
-      if (!choices.some((c) => c.is_correct)) {
-        throw new Error('Au moins une bonne réponse est requise');
+    if (Array.isArray(choices) && choices.length) {
+      const choicesError = choicesValidationError(choices);
+      if (choicesError) {
+        throw new Error(choicesError);
       }
       db.prepare('DELETE FROM choices WHERE question_id = ?').run(id);
       const insertC = db.prepare(

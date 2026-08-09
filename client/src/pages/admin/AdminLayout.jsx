@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { api, getAdminToken, setAdminToken } from '../../api';
 import { useLang } from '../../i18n/LanguageContext';
 import LangSwitcher from '../../components/LangSwitcher';
+import DevContact from '../../components/DevContact';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen md:flex">
-      <aside className="md:w-60 border-b md:border-b-0 md:border-e border-brand/10 bg-brand-dark text-white shrink-0">
+      <aside className="md:w-60 border-b md:border-b-0 md:border-e border-brand/10 bg-brand-dark text-white shrink-0 md:flex md:flex-col">
         <div className="px-5 py-5 flex items-start justify-between gap-2">
           <div>
             <Link to="/" className="font-display text-2xl text-gold-soft">
@@ -81,6 +82,9 @@ export default function AdminLayout() {
             {t('admin.logout')}
           </button>
         </nav>
+        <div className="px-5 pb-4 md:mt-auto">
+          <DevContact className="text-white/50" linkClassName="text-gold-soft hover:text-white" />
+        </div>
       </aside>
       <main className="flex-1 p-4 md:p-8 max-w-6xl">
         <Outlet />

@@ -47,6 +47,11 @@ export const translations = {
       accessExams: 'Accéder aux épreuves',
       footer: 'Tahdir — Préparation aux concours · Mauritanie',
     },
+    dev: {
+      label: 'Développeur',
+      name: 'Emine Youbah',
+      contact: 'Contacter sur WhatsApp',
+    },
     login: {
       title: 'Connexion candidat',
       subtitle:
@@ -151,7 +156,7 @@ export const translations = {
       login: 'Se connecter',
       checking: 'Vérification…',
       questionsSubtitle:
-        "Jusqu'à 50 questions par QCM · 4 choix · une ou plusieurs bonnes réponses. Les questions peuvent être en arabe ou en français.",
+        "Jusqu'à 50 questions par QCM · 2 à 6 choix · une ou plusieurs bonnes réponses. Les questions peuvent être en arabe ou en français.",
       importJson: 'Importer un fichier JSON',
       importHint:
         "Chargez un fichier JSON par langue (arabe et/ou français), question par question dans le même ordre. Si une question n'a pas de version dans une langue, laissez-la vide ou omettez-la à la fin du fichier : elle restera disponible dans l'autre langue.",
@@ -170,6 +175,8 @@ export const translations = {
       choiceText: 'Texte choix {label}',
       choiceTextFr: 'Choix {label} (Français)',
       choiceTextAr: 'Choix {label} (Arabe)',
+      addChoice: '+ Ajouter un choix',
+      removeChoice: 'Retirer',
       explanation: 'Explication (affichée après correction)',
       explanationFr: 'Explication (Français)',
       explanationAr: 'Explication (Arabe)',
@@ -230,6 +237,11 @@ export const translations = {
       readyText: 'أدخل رمز الدخول لفتح جلسة التدريب الخاصة بك.',
       accessExams: 'الدخول إلى الاختبارات',
       footer: 'تَحضير — التحضير للمسابقات · موريتانيا',
+    },
+    dev: {
+      label: 'المطوّر',
+      name: 'Emine Youbah',
+      contact: 'تواصل عبر واتساب',
     },
     login: {
       title: 'دخول المترشح',
@@ -331,7 +343,7 @@ export const translations = {
       login: 'تسجيل الدخول',
       checking: 'جاري التحقق…',
       questionsSubtitle:
-        'حتى 50 سؤالاً لكل اختبار · 4 خيارات · إجابة صحيحة واحدة أو أكثر. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
+        'حتى 50 سؤالاً لكل اختبار · من 2 إلى 6 خيارات · إجابة صحيحة واحدة أو أكثر. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
       importJson: 'استيراد ملف JSON',
       importHint:
         'حمّل ملف JSON لكل لغة (عربي و/أو فرنسي)، بنفس ترتيب الأسئلة. إذا لم يكن للسؤال نسخة بلغة ما، اتركه فارغاً أو احذفه من نهاية الملف: سيبقى متاحاً باللغة الأخرى.',
@@ -350,6 +362,8 @@ export const translations = {
       choiceText: 'نص الخيار {label}',
       choiceTextFr: 'الخيار {label} (بالفرنسية)',
       choiceTextAr: 'الخيار {label} (بالعربية)',
+      addChoice: '+ إضافة خيار',
+      removeChoice: 'إزالة',
       explanation: 'الشرح (يظهر بعد التصحيح)',
       explanationFr: 'الشرح (بالفرنسية)',
       explanationAr: 'الشرح (بالعربية)',

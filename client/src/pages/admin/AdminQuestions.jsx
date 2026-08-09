@@ -3,8 +3,12 @@ import { api } from '../../api';
 import { useLang } from '../../i18n/LanguageContext';
 import { textDir } from '../../i18n/translations';
 
-function blankChoices() {
-  return ['A', 'B', 'C', 'D'].map((label) => ({
+const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const MIN_CHOICES = 2;
+const MAX_CHOICES = CHOICE_LABELS.length;
+
+function blankChoices(count = 4) {
+  return CHOICE_LABELS.slice(0, count).map((label) => ({
     label,
     text_fr: '',
     text_ar: '',
@@ -70,6 +74,28 @@ export default function AdminQuestions() {
       ...f,
       choices: f.choices.map((c) => (c.label === label ? { ...c, ...patch } : c)),
     }));
+  }
+
+  function addChoice() {
+    setForm((f) => {
+      if (f.choices.length >= MAX_CHOICES) return f;
+      const label = CHOICE_LABELS[f.choices.length];
+      return {
+        ...f,
+        choices: [...f.choices, { label, text_fr: '', text_ar: '', is_correct: false }],
+      };
+    });
+  }
+
+  function removeChoice(label) {
+    setForm((f) => {
+      if (f.choices.length <= MIN_CHOICES) return f;
+      const remaining = f.choices.filter((c) => c.label !== label);
+      return {
+        ...f,
+        choices: remaining.map((c, i) => ({ ...c, label: CHOICE_LABELS[i] })),
+      };
+    });
   }
 
   async function onUpload(e) {
@@ -335,16 +361,27 @@ export default function AdminQuestions() {
                   <span className="font-semibold" dir="ltr">
                     {c.label}
                   </span>
-                  <label className="text-xs flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={c.is_correct}
-                      onChange={(e) =>
-                        updateChoice(c.label, { is_correct: e.target.checked })
-                      }
-                    />
-                    {t('admin.correct')}
-                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={c.is_correct}
+                        onChange={(e) =>
+                          updateChoice(c.label, { is_correct: e.target.checked })
+                        }
+                      />
+                      {t('admin.correct')}
+                    </label>
+                    {form.choices.length > MIN_CHOICES && (
+                      <button
+                        type="button"
+                        onClick={() => removeChoice(c.label)}
+                        className="text-xs text-red-700 hover:underline"
+                      >
+                        {t('admin.removeChoice')}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <input
                   className="w-full rounded-md border border-brand/20 px-2 py-1.5 text-sm content-auto"
@@ -363,6 +400,15 @@ export default function AdminQuestions() {
               </div>
             ))}
           </div>
+          {form.choices.length < MAX_CHOICES && (
+            <button
+              type="button"
+              onClick={addChoice}
+              className="text-sm text-brand hover:underline"
+            >
+              {t('admin.addChoice')}
+            </button>
+          )}
           <div className="grid sm:grid-cols-2 gap-3">
             <textarea
               className="w-full rounded-lg border border-brand/20 px-3 py-2 min-h-16 content-auto"

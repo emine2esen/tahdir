@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, setCandidateToken } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import LangSwitcher from '../components/LangSwitcher';
+import DevContact from '../components/DevContact';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -147,8 +148,9 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-brand/10 py-6 text-center text-xs text-muted">
-        {t('home.footer')}
+      <footer className="border-t border-brand/10 py-6 text-center text-xs text-muted space-y-1.5">
+        <p>{t('home.footer')}</p>
+        <DevContact className="text-muted" />
       </footer>
     </div>
   );
