@@ -46,6 +46,9 @@ export const translations = {
         "Saisissez votre code d'accès pour ouvrir votre session d'entraînement.",
       accessExams: 'Accéder aux épreuves',
       footer: 'Tahdir — Préparation aux concours · Mauritanie',
+      requestCode: 'Demander un code',
+      requestCodeNotice:
+        "Le code d'accès vous est fourni par téléphone ou sur WhatsApp au 36949445.",
     },
     dev: {
       label: 'Développeur',
@@ -239,6 +242,8 @@ export const translations = {
       readyText: 'أدخل رمز الدخول لفتح جلسة التدريب الخاصة بك.',
       accessExams: 'الدخول إلى الاختبارات',
       footer: 'تَحضير — التحضير للمسابقات · موريتانيا',
+      requestCode: 'طلب رمز',
+      requestCodeNotice: 'يُسلَّم لك رمز الدخول عبر الهاتف أو واتساب على الرقم 36949445.',
     },
     dev: {
       label: 'المطوّر',

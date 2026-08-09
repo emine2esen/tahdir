@@ -5,6 +5,8 @@ import { useLang } from '../i18n/LanguageContext';
 import LangSwitcher from '../components/LangSwitcher';
 import DevContact from '../components/DevContact';
 
+const CODE_WHATSAPP = '22236949445';
+
 export default function Home() {
   const navigate = useNavigate();
   const { t } = useLang();
@@ -82,7 +84,18 @@ export default function Home() {
               >
                 {t('home.enterCode')}
               </Link>
+              <a
+                href={`https://wa.me/${CODE_WHATSAPP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white font-semibold px-7 py-3.5 hover:brightness-105 transition"
+              >
+                {t('home.requestCode')}
+              </a>
             </div>
+            <p className="animate-fade-up-delay-2 text-xs text-muted mt-4 max-w-md mx-auto">
+              {t('home.requestCodeNotice')}
+            </p>
           </div>
         </section>
 

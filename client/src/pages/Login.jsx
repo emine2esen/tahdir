@@ -4,6 +4,8 @@ import { api, setCandidateToken } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import LangSwitcher from '../components/LangSwitcher';
 
+const CODE_WHATSAPP = '22236949445';
+
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useLang();
@@ -89,6 +91,20 @@ export default function Login() {
               {loading ? t('login.loading') : t('login.submit')}
             </button>
           </form>
+
+          <div className="text-center mt-6">
+            <a
+              href={`https://wa.me/${CODE_WHATSAPP}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white font-semibold px-6 py-3 hover:brightness-105 transition"
+            >
+              {t('home.requestCode')}
+            </a>
+            <p className="text-xs text-muted mt-3 max-w-sm mx-auto">
+              {t('home.requestCodeNotice')}
+            </p>
+          </div>
         </div>
       </main>
     </div>
