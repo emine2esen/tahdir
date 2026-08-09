@@ -156,7 +156,7 @@ export const translations = {
       login: 'Se connecter',
       checking: 'Vérification…',
       questionsSubtitle:
-        "Jusqu'à 50 questions par QCM · 2 à 6 choix · une ou plusieurs bonnes réponses. Les questions peuvent être en arabe ou en français.",
+        "Jusqu'à 100 questions par QCM · 2 à 6 choix · une ou plusieurs bonnes réponses. Les questions peuvent être en arabe ou en français.",
       importJson: 'Importer un fichier JSON',
       importHint:
         "Chargez un fichier JSON par langue (arabe et/ou français), question par question dans le même ordre. Si une question n'a pas de version dans une langue, laissez-la vide ou omettez-la à la fin du fichier : elle restera disponible dans l'autre langue.",
@@ -167,7 +167,7 @@ export const translations = {
       importSeparateNeedOne: 'Choisissez au moins un fichier (arabe ou français)',
       importing: 'Import…',
       replaceExisting: 'Remplacer les questions existantes',
-      newQuestion: 'Nouvelle question ({n}/50)',
+      newQuestion: 'Nouvelle question ({n}/100)',
       questionText: 'Énoncé de la question (FR ou AR)',
       questionTextFr: 'Énoncé (Français)',
       questionTextAr: 'Énoncé (Arabe)',
@@ -343,7 +343,7 @@ export const translations = {
       login: 'تسجيل الدخول',
       checking: 'جاري التحقق…',
       questionsSubtitle:
-        'حتى 50 سؤالاً لكل اختبار · من 2 إلى 6 خيارات · إجابة صحيحة واحدة أو أكثر. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
+        'حتى 100 سؤال لكل اختبار · من 2 إلى 6 خيارات · إجابة صحيحة واحدة أو أكثر. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
       importJson: 'استيراد ملف JSON',
       importHint:
         'حمّل ملف JSON لكل لغة (عربي و/أو فرنسي)، بنفس ترتيب الأسئلة. إذا لم يكن للسؤال نسخة بلغة ما، اتركه فارغاً أو احذفه من نهاية الملف: سيبقى متاحاً باللغة الأخرى.',
@@ -354,7 +354,7 @@ export const translations = {
       importSeparateNeedOne: 'اختر ملفاً واحداً على الأقل (عربي أو فرنسي)',
       importing: 'جاري الاستيراد…',
       replaceExisting: 'استبدال الأسئلة الحالية',
-      newQuestion: 'سؤال جديد ({n}/50)',
+      newQuestion: 'سؤال جديد ({n}/100)',
       questionText: 'نص السؤال (عربي أو فرنسي)',
       questionTextFr: 'نص السؤال (بالفرنسية)',
       questionTextAr: 'نص السؤال (بالعربية)',

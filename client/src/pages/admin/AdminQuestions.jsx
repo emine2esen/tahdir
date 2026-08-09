@@ -208,7 +208,7 @@ export default function AdminQuestions() {
       setSuccess(
         `${result.imported} question(s) importée(s)${
           result.replaced ? ' (remplacement)' : ''
-        }. Total : ${result.total}/50.`
+        }. Total : ${result.total}/100.`
       );
     } catch (err) {
       setError(err.message);
@@ -263,7 +263,7 @@ export default function AdminQuestions() {
           {!qcms.length && <option value="">{t('admin.noQcm')}</option>}
           {qcms.map((q) => (
             <option key={q.id} value={q.id}>
-              Niv. {q.level} — {q.title} ({q.questions_count}/50)
+              Niv. {q.level} — {q.title} ({q.questions_count}/100)
             </option>
           ))}
         </select>

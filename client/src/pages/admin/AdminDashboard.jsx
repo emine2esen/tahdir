@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
       <div className="rounded-xl border border-brand/10 bg-white/60 p-5 text-sm text-muted space-y-2">
         <p>
-          Hiérarchie : <strong>Concours → Profil → QCM (10 niveaux) → Questions (50)</strong>
+          Hiérarchie : <strong>Concours → Profil → QCM (10 niveaux) → Questions (100)</strong>
         </p>
         <p>
           Les scores candidats sont calculés dans le navigateur et ne sont pas

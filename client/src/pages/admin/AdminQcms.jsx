@@ -166,7 +166,7 @@ export default function AdminQcms() {
                 Niv. {row.level} — {row.title}
               </div>
               <div className="text-sm text-muted">
-                {row.duration_minutes} min · {row.questions_count}/50 questions
+                {row.duration_minutes} min · {row.questions_count}/100 questions
               </div>
             </div>
             <div className="flex gap-2">
