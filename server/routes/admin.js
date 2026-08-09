@@ -238,15 +238,34 @@ router.put('/qcms/:id', requireAdmin, (req, res) => {
   const duration_minutes = req.body.duration_minutes ?? existing.duration_minutes;
   const is_active =
     req.body.is_active !== undefined ? (req.body.is_active ? 1 : 0) : existing.is_active;
+  const profil_id = req.body.profil_id ? Number(req.body.profil_id) : existing.profil_id;
+
+  const lvl = Number(level);
+  if (lvl < 1 || lvl > 10) {
+    return res.status(400).json({ error: 'Le niveau doit être entre 1 et 10' });
+  }
+
+  if (profil_id !== existing.profil_id) {
+    const targetProfil = db.prepare('SELECT id FROM profils WHERE id = ?').get(profil_id);
+    if (!targetProfil) {
+      return res.status(404).json({ error: 'Profil cible introuvable' });
+    }
+    const targetCount = db
+      .prepare('SELECT COUNT(*) AS c FROM qcms WHERE profil_id = ?')
+      .get(profil_id).c;
+    if (targetCount >= 10) {
+      return res.status(400).json({ error: 'Le profil cible a déjà 10 QCM (maximum)' });
+    }
+  }
 
   try {
     db.prepare(
-      `UPDATE qcms SET title = ?, level = ?, duration_minutes = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(title, Number(level), Number(duration_minutes), is_active, id);
+      `UPDATE qcms SET profil_id = ?, title = ?, level = ?, duration_minutes = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?`
+    ).run(profil_id, title, lvl, Number(duration_minutes), is_active, id);
     res.json(db.prepare('SELECT * FROM qcms WHERE id = ?').get(id));
   } catch (e) {
     if (String(e.message).includes('UNIQUE')) {
-      return res.status(400).json({ error: 'Ce niveau existe déjà pour ce profil' });
+      return res.status(400).json({ error: 'Ce niveau existe déjà pour ce profil cible' });
     }
     throw e;
   }

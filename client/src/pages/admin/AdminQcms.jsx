@@ -16,6 +16,9 @@ export default function AdminQcms() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState('');
+  const [reassignId, setReassignId] = useState(null);
+  const [reassignForm, setReassignForm] = useState({ profil_id: '', level: 1 });
+  const [reassignError, setReassignError] = useState('');
 
   useEffect(() => {
     api.getProfils().then((p) => {
@@ -70,6 +73,32 @@ export default function AdminQcms() {
     if (!confirm('Supprimer ce QCM et ses questions ?')) return;
     await api.deleteQcm(id);
     setRows(await api.getQcms(profilId));
+  }
+
+  function startReassign(row) {
+    setEditId(null);
+    setReassignError('');
+    setReassignId(row.id);
+    const other = profils.find((p) => String(p.id) !== String(row.profil_id));
+    setReassignForm({ profil_id: other ? String(other.id) : '', level: row.level });
+  }
+
+  async function submitReassign(row) {
+    if (!reassignForm.profil_id) {
+      setReassignError('Choisissez un profil cible');
+      return;
+    }
+    setReassignError('');
+    try {
+      await api.updateQcm(row.id, {
+        profil_id: Number(reassignForm.profil_id),
+        level: Number(reassignForm.level),
+      });
+      setReassignId(null);
+      setRows(await api.getQcms(profilId));
+    } catch (err) {
+      setReassignError(err.message);
+    }
   }
 
   return (
@@ -159,28 +188,91 @@ export default function AdminQcms() {
         {rows.map((row) => (
           <div
             key={row.id}
-            className="rounded-xl border border-brand/10 bg-white/60 p-4 flex flex-wrap justify-between gap-3"
+            className="rounded-xl border border-brand/10 bg-white/60 p-4"
           >
-            <div>
-              <div className="font-semibold">
-                Niv. {row.level} — {row.title}
+            <div className="flex flex-wrap justify-between gap-3">
+              <div>
+                <div className="font-semibold">
+                  Niv. {row.level} — {row.title}
+                </div>
+                <div className="text-sm text-muted">
+                  {row.duration_minutes} min · {row.questions_count} questions
+                </div>
               </div>
-              <div className="text-sm text-muted">
-                {row.duration_minutes} min · {row.questions_count} questions
+              <div className="flex gap-2">
+                <button type="button" onClick={() => startEdit(row)} className="text-sm border rounded-lg px-3 py-1.5">
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startReassign(row)}
+                  className="text-sm border border-brand/30 text-brand rounded-lg px-3 py-1.5"
+                >
+                  Réaffecter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(row.id)}
+                  className="text-sm border border-red-200 text-red-700 rounded-lg px-3 py-1.5"
+                >
+                  Supprimer
+                </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => startEdit(row)} className="text-sm border rounded-lg px-3 py-1.5">
-                Modifier
-              </button>
-              <button
-                type="button"
-                onClick={() => remove(row.id)}
-                className="text-sm border border-red-200 text-red-700 rounded-lg px-3 py-1.5"
-              >
-                Supprimer
-              </button>
-            </div>
+
+            {reassignId === row.id && (
+              <div className="mt-3 pt-3 border-t border-brand/10 flex flex-wrap items-end gap-3">
+                <label className="text-sm">
+                  Profil cible
+                  <select
+                    className="mt-1 rounded-lg border border-brand/20 px-3 py-2 bg-white"
+                    value={reassignForm.profil_id}
+                    onChange={(e) =>
+                      setReassignForm({ ...reassignForm, profil_id: e.target.value })
+                    }
+                  >
+                    <option value="">Choisir un profil</option>
+                    {profils
+                      .filter((p) => String(p.id) !== String(row.profil_id))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.concours_title} — {p.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="text-sm">
+                  Ordre (niveau 1–10) dans le profil cible
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    className="mt-1 w-24 rounded-lg border border-brand/20 px-3 py-2"
+                    value={reassignForm.level}
+                    onChange={(e) =>
+                      setReassignForm({ ...reassignForm, level: e.target.value })
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => submitReassign(row)}
+                  className="rounded-lg bg-brand text-white px-4 py-2 text-sm"
+                >
+                  Confirmer le transfert
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReassignId(null)}
+                  className="rounded-lg border px-4 py-2 text-sm"
+                >
+                  Annuler
+                </button>
+                {reassignError && (
+                  <p className="text-red-700 text-sm w-full">{reassignError}</p>
+                )}
+              </div>
+            )}
           </div>
         ))}
         {!rows.length && <p className="text-muted">Aucun QCM pour ce profil.</p>}
