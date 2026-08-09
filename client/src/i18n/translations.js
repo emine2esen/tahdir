@@ -105,6 +105,8 @@ export const translations = {
       arabicNote: 'Les questions peuvent être en arabe ou en français.',
       langFallbackFr: "Cette question n'existe qu'en français.",
       langFallbackAr: "Cette question n'existe qu'en arabe.",
+      quit: 'Quitter',
+      quitConfirm: 'Voulez-vous vraiment quitter ? Votre progression sera perdue.',
     },
     levels: {
       1: 'Facile',
@@ -136,7 +138,7 @@ export const translations = {
       noQuestions: 'Aucune question disponible pour ce profil pour le moment.',
       ctaText:
         'Souhaitez-vous compléter votre évaluation ? Contactez-nous au numéro',
-      whatsapp: 'Continuer sur WhatsApp',
+      whatsapp: 'Demander mon code sur WhatsApp',
       retry: 'Réessayer',
       fullAccess: 'J’ai un code d’accès',
       tryFromHome: 'Essayer la simulation',
@@ -294,6 +296,8 @@ export const translations = {
       arabicNote: 'يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
       langFallbackFr: 'هذا السؤال متوفر بالفرنسية فقط.',
       langFallbackAr: 'هذا السؤال متوفر بالعربية فقط.',
+      quit: 'خروج',
+      quitConfirm: 'هل تريد فعلاً الخروج؟ سيتم فقدان تقدمك.',
     },
     levels: {
       1: 'سهل',
@@ -323,7 +327,7 @@ export const translations = {
       progress: 'السؤال {current}/{total}',
       noQuestions: 'لا توجد أسئلة متاحة لهذه الشعبة حالياً.',
       ctaText: 'هل تريد إكمال تقييمك؟ تواصل معنا على الرقم',
-      whatsapp: 'المتابعة عبر واتساب',
+      whatsapp: 'طلب رمزي عبر واتساب',
       retry: 'إعادة المحاولة',
       fullAccess: 'لدي رمز دخول',
       tryFromHome: 'جرّب المحاكاة',

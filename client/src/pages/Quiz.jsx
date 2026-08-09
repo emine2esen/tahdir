@@ -62,6 +62,12 @@ export default function Quiz() {
     setFinished(true);
   }
 
+  function quitExam() {
+    if (window.confirm(t('quiz.quitConfirm'))) {
+      navigate('/');
+    }
+  }
+
   useEffect(() => {
     if (!qcm || finished || !startedRef.current) return undefined;
     const timer = setInterval(() => {
@@ -266,7 +272,13 @@ export default function Quiz() {
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <LangSwitcher />
+            <button
+              type="button"
+              onClick={quitExam}
+              className="text-sm text-red-700 font-medium hover:underline"
+            >
+              {t('quiz.quit')}
+            </button>
             <div
               className={`font-display text-2xl tabular-nums ${
                 urgent ? 'timer-urgent' : 'text-brand'

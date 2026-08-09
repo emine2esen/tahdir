@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, scoreQuiz } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import { textDir } from '../i18n/translations';
@@ -8,6 +8,7 @@ import LangSwitcher from '../components/LangSwitcher';
 const WHATSAPP_FALLBACK = 'https://wa.me/22236949445';
 
 export default function Simulation() {
+  const navigate = useNavigate();
   const { t, lang } = useLang();
   const [catalog, setCatalog] = useState(null);
   const [concoursId, setConcoursId] = useState('');
@@ -86,6 +87,12 @@ export default function Simulation() {
     setResult(scoreQuiz(quiz.questions, answers));
   }
 
+  function quitExam() {
+    if (window.confirm(t('quiz.quitConfirm'))) {
+      navigate('/');
+    }
+  }
+
   const whatsappUrl =
     quiz?.whatsappUrl ||
     catalog?.whatsappUrl ||
@@ -106,10 +113,22 @@ export default function Simulation() {
           {t('brand')}
         </Link>
         <div className="flex items-center gap-3">
-          <LangSwitcher />
-          <Link to="/connexion" className="text-sm text-brand font-medium">
-            {t('nav.login')}
-          </Link>
+          {quiz && !result ? (
+            <button
+              type="button"
+              onClick={quitExam}
+              className="text-sm text-red-700 font-medium hover:underline"
+            >
+              {t('quiz.quit')}
+            </button>
+          ) : (
+            <>
+              <LangSwitcher />
+              <Link to="/connexion" className="text-sm text-brand font-medium">
+                {t('nav.login')}
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -240,7 +259,7 @@ export default function Simulation() {
         )}
 
         {result && (
-          <div className="animate-fade-up space-y-6">
+          <div className="animate-fade-up space-y-8">
             <div className="rounded-2xl border border-brand/10 bg-white/70 p-8 text-center">
               <p className="text-sm uppercase tracking-widest text-gold mb-2">
                 {t('quiz.score')}
@@ -249,9 +268,90 @@ export default function Simulation() {
                 {result.score}
                 <span className="text-2xl text-muted">/{result.total}</span>
               </p>
-              <p className="text-muted mt-4 max-w-md mx-auto">
-                {t('sim.ctaText')}
-              </p>
+            </div>
+
+            <div>
+              <h2 className="font-display text-2xl text-brand-dark mb-4">
+                {t('quiz.details')}
+              </h2>
+              <div className="space-y-4">
+                {result.details.map((d, i) => (
+                  <article
+                    key={d.question.id}
+                    className={`rounded-xl border p-4 ${
+                      d.isCorrect
+                        ? 'border-emerald-200 bg-emerald-50/70'
+                        : 'border-red-200 bg-red-50/60'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h3
+                        className="font-medium content-auto"
+                        dir={textDir(d.question.text)}
+                      >
+                        Q{i + 1}. {d.question.text}
+                      </h3>
+                      <span
+                        className={`text-xs font-semibold shrink-0 ${
+                          d.isCorrect ? 'text-emerald-700' : 'text-red-700'
+                        }`}
+                      >
+                        {d.isCorrect ? t('quiz.correct') : t('quiz.incorrect')}
+                      </span>
+                    </div>
+                    {d.question.image_url && (
+                      <img
+                        src={d.question.image_url}
+                        alt=""
+                        className="max-h-40 rounded-lg mb-3"
+                      />
+                    )}
+                    <ul className="space-y-1.5">
+                      {d.question.choices.map((c) => {
+                        const selected = d.selected.includes(c.label);
+                        const correct = c.is_correct;
+                        let cls = 'border-transparent bg-white/50';
+                        if (correct) cls = 'border-emerald-400 bg-emerald-100';
+                        if (selected && !correct) cls = 'border-red-400 bg-red-100';
+                        return (
+                          <li
+                            key={c.label}
+                            className={`rounded-lg border px-3 py-2 text-sm content-auto ${cls}`}
+                            dir={textDir(c.text)}
+                          >
+                            <strong className="me-2" dir="ltr">
+                              {c.label}.
+                            </strong>
+                            {c.text}
+                            {correct && (
+                              <span className="ms-2 text-xs text-emerald-700">
+                                {t('quiz.goodAnswer')}
+                              </span>
+                            )}
+                            {selected && !correct && (
+                              <span className="ms-2 text-xs text-red-700">
+                                {t('quiz.yourChoice')}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {d.question.explanation && (
+                      <p
+                        className="text-sm text-muted mt-3 border-t border-black/5 pt-2 content-auto"
+                        dir={textDir(d.question.explanation)}
+                      >
+                        {d.question.explanation}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-brand/10 bg-white/70 p-8 text-center">
+              <p className="text-muted max-w-md mx-auto">{t('sim.ctaText')}</p>
               <p className="font-semibold text-brand-dark mt-2" dir="ltr">
                 36949445
               </p>
