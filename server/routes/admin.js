@@ -11,7 +11,6 @@ const requireAdmin = authAdmin(db);
 const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MIN_CHOICES = 2;
 const MAX_CHOICES = CHOICE_LABELS.length;
-const MAX_QUESTIONS_PER_QCM = 100;
 
 /** Valide une liste de choix déjà normalisée (label, is_correct) : nombre, labels, bonne réponse. */
 function choicesValidationError(choices) {
@@ -291,11 +290,6 @@ router.post('/qcms/:id/questions', requireAdmin, (req, res) => {
   const qcmId = Number(req.params.id);
   const qcm = db.prepare('SELECT * FROM qcms WHERE id = ?').get(qcmId);
   if (!qcm) return res.status(404).json({ error: 'QCM introuvable' });
-
-  const count = db.prepare('SELECT COUNT(*) AS c FROM questions WHERE qcm_id = ?').get(qcmId).c;
-  if (count >= MAX_QUESTIONS_PER_QCM) {
-    return res.status(400).json({ error: `Maximum ${MAX_QUESTIONS_PER_QCM} questions par QCM` });
-  }
 
   const body = req.body || {};
   const text_fr = String(body.text_fr ?? body.text ?? '').trim();
@@ -597,16 +591,6 @@ router.post('/qcms/:id/questions/import', requireAdmin, (req, res) => {
     }
   } catch (e) {
     return res.status(400).json({ error: e.message });
-  }
-
-  const existingCount = db
-    .prepare('SELECT COUNT(*) AS c FROM questions WHERE qcm_id = ?')
-    .get(qcmId).c;
-  const baseCount = replace ? 0 : existingCount;
-  if (baseCount + normalized.length > MAX_QUESTIONS_PER_QCM) {
-    return res.status(400).json({
-      error: `Import impossible : ${baseCount} existante(s) + ${normalized.length} à importer dépasse ${MAX_QUESTIONS_PER_QCM}.`,
-    });
   }
 
   const insertQ = db.prepare(
