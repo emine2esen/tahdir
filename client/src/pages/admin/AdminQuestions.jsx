@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLang } from '../../i18n/LanguageContext';
-import { textDir } from '../../i18n/translations';
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MIN_CHOICES = 2;
@@ -488,13 +487,8 @@ export default function AdminQuestions() {
             key={q.id}
             className="rounded-xl border border-brand/10 bg-white/60 p-4"
           >
-            <div className="flex flex-wrap justify-between gap-2 mb-2">
-              <div
-                className="font-medium content-auto"
-                dir={textDir(q.text)}
-              >
-                #{q.order_num}. {q.text}
-              </div>
+            <div className="flex flex-wrap justify-between gap-2 mb-1">
+              <span className="text-xs text-muted">#{q.order_num}</span>
               <div className="flex items-center gap-3">
                 <label className="text-xs flex items-center gap-1.5 text-muted">
                   <input
@@ -520,13 +514,36 @@ export default function AdminQuestions() {
                 </button>
               </div>
             </div>
-            <ul className="text-sm text-muted space-y-1">
+            <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1 font-medium mb-3">
+              <div className="content-auto" dir="ltr">
+                {q.text_fr || <span className="text-muted italic font-normal">—</span>}
+              </div>
+              <div className="content-auto" dir="rtl">
+                {q.text_ar || <span className="text-muted italic font-normal">—</span>}
+              </div>
+            </div>
+            <ul className="text-sm text-muted space-y-2">
               {q.choices.map((c) => (
-                <li key={c.label} className="content-auto" dir={textDir(c.text)}>
-                  <span dir="ltr">{c.label}.</span> {c.text}{' '}
-                  {c.is_correct ? (
-                    <span className="text-emerald-700 font-medium">✓</span>
-                  ) : null}
+                <li
+                  key={c.label}
+                  className="border-b border-black/5 pb-2 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span dir="ltr" className="font-semibold">
+                      {c.label}.
+                    </span>
+                    {c.is_correct && (
+                      <span className="text-emerald-700 font-medium text-xs">✓</span>
+                    )}
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-x-4">
+                    <span className="content-auto" dir="ltr">
+                      {c.text_fr || <span className="italic">—</span>}
+                    </span>
+                    <span className="content-auto" dir="rtl">
+                      {c.text_ar || <span className="italic">—</span>}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
