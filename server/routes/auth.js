@@ -13,7 +13,8 @@ const {
 
 const router = express.Router();
 
-const ALLOWED_DURATIONS = [1, 2, 7, 30];
+// Durées autorisées, en heures : 3h, 5h, 1 jour, 2 jours, 1 semaine, 1 mois.
+const ALLOWED_DURATIONS = [3, 5, 24, 48, 168, 720];
 
 function normalizeCode(code) {
   return String(code || '')
@@ -22,9 +23,9 @@ function normalizeCode(code) {
     .replace(/\s+/g, '');
 }
 
-function addDaysIso(days) {
+function addHoursIso(hours) {
   const d = new Date();
-  d.setDate(d.getDate() + Number(days));
+  d.setHours(d.getHours() + Number(hours));
   return d.toISOString();
 }
 
@@ -76,10 +77,10 @@ router.post('/candidate/login', (req, res) => {
   let expiresAt = row.expires_at;
 
   if (!row.is_used) {
-    const days = ALLOWED_DURATIONS.includes(Number(row.duration_days))
-      ? Number(row.duration_days)
-      : 7;
-    expiresAt = addDaysIso(days);
+    const hours = ALLOWED_DURATIONS.includes(Number(row.duration_hours))
+      ? Number(row.duration_hours)
+      : 168;
+    expiresAt = addHoursIso(hours);
     db.prepare(
       `UPDATE access_codes
        SET is_used = 1, used_at = datetime('now'), expires_at = ?,
@@ -109,7 +110,7 @@ router.post('/candidate/login', (req, res) => {
     profilId: updated.profil_id,
     code: updated.code,
     expiresAt: updated.expires_at,
-    durationDays: updated.duration_days,
+    durationHours: updated.duration_hours,
   });
 });
 
@@ -140,7 +141,7 @@ router.post('/candidate/claim', authCandidate(db), (req, res) => {
     profilId: row.profil_id,
     code: row.code,
     expiresAt: row.expires_at,
-    durationDays: row.duration_days,
+    durationHours: row.duration_hours,
   });
 });
 
@@ -150,7 +151,7 @@ router.get('/candidate/me', authCandidate(db), (req, res) => {
     code: req.candidate.code,
     profilId: req.candidate.profilId,
     expiresAt: row.expires_at,
-    durationDays: row.duration_days,
+    durationHours: row.duration_hours,
   });
 });
 

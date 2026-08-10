@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 
 const DURATIONS = [
-  { value: 1, label: '1 jour' },
-  { value: 2, label: '2 jours' },
-  { value: 7, label: '1 semaine' },
-  { value: 30, label: '1 mois' },
+  { value: 3, label: '3 heures' },
+  { value: 5, label: '5 heures' },
+  { value: 24, label: '1 jour' },
+  { value: 48, label: '2 jours' },
+  { value: 168, label: '1 semaine' },
+  { value: 720, label: '1 mois' },
 ];
 
 export default function AdminCodes() {
@@ -14,7 +16,7 @@ export default function AdminCodes() {
   const [count, setCount] = useState(5);
   const [label, setLabel] = useState('');
   const [profilId, setProfilId] = useState('');
-  const [durationDays, setDurationDays] = useState(7);
+  const [durationHours, setDurationHours] = useState(168);
   const [error, setError] = useState('');
   const [created, setCreated] = useState([]);
 
@@ -36,7 +38,7 @@ export default function AdminCodes() {
         count: Number(count),
         label,
         profil_id: profilId ? Number(profilId) : null,
-        duration_days: Number(durationDays),
+        duration_hours: Number(durationHours),
       });
       setCreated(codes);
       await load();
@@ -51,8 +53,8 @@ export default function AdminCodes() {
     await load();
   }
 
-  function durationLabel(days) {
-    return DURATIONS.find((d) => d.value === Number(days))?.label || `${days} j`;
+  function durationLabel(hours) {
+    return DURATIONS.find((d) => d.value === Number(hours))?.label || `${hours} h`;
   }
 
   return (
@@ -92,8 +94,8 @@ export default function AdminCodes() {
           Durée
           <select
             className="mt-1 w-full rounded-lg border border-brand/20 px-3 py-2"
-            value={durationDays}
-            onChange={(e) => setDurationDays(e.target.value)}
+            value={durationHours}
+            onChange={(e) => setDurationHours(e.target.value)}
           >
             {DURATIONS.map((d) => (
               <option key={d.value} value={d.value}>
@@ -131,7 +133,7 @@ export default function AdminCodes() {
           <div className="font-mono text-sm space-y-1">
             {created.map((c) => (
               <div key={c.id}>
-                {c.code} · {durationLabel(c.duration_days)}
+                {c.code} · {durationLabel(c.duration_hours)}
               </div>
             ))}
           </div>
@@ -157,7 +159,7 @@ export default function AdminCodes() {
               return (
                 <tr key={row.id} className="border-t border-brand/5">
                   <td className="px-3 py-2 font-mono">{row.code}</td>
-                  <td className="px-3 py-2">{durationLabel(row.duration_days)}</td>
+                  <td className="px-3 py-2">{durationLabel(row.duration_hours)}</td>
                   <td className="px-3 py-2">{row.profil_title || 'Tous'}</td>
                   <td className="px-3 py-2">
                     {!row.is_used ? (

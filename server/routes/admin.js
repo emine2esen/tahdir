@@ -4,6 +4,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const { authAdmin } = require('../auth');
+const { ALLOWED_DURATIONS } = require('./auth');
 
 const router = express.Router();
 const requireAdmin = authAdmin(db);
@@ -849,9 +850,9 @@ router.post('/upload', requireAdmin, (req, res) => {
 });
 
 // --- Access codes ---
+// Code numérique simple (6 chiffres) : facile à taper au clavier, sans copier-coller.
 function generateCode() {
-  const part = () => Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `CONCOURS-${part()}${part()}`.slice(0, 16);
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 router.get('/codes', requireAdmin, (req, res) => {
@@ -869,13 +870,13 @@ router.get('/codes', requireAdmin, (req, res) => {
 });
 
 router.post('/codes', requireAdmin, (req, res) => {
-  const { count = 1, label = '', profil_id = null, duration_days = 7 } = req.body || {};
+  const { count = 1, label = '', profil_id = null, duration_hours = 168 } = req.body || {};
   const n = Math.min(Math.max(Number(count) || 1, 1), 100);
-  const days = [1, 2, 7, 30].includes(Number(duration_days))
-    ? Number(duration_days)
-    : 7;
+  const hours = ALLOWED_DURATIONS.includes(Number(duration_hours))
+    ? Number(duration_hours)
+    : 168;
   const insert = db.prepare(
-    `INSERT INTO access_codes (code, label, profil_id, duration_days) VALUES (?, ?, ?, ?)`
+    `INSERT INTO access_codes (code, label, profil_id, duration_hours) VALUES (?, ?, ?, ?)`
   );
 
   const codes = [];
@@ -892,7 +893,7 @@ router.post('/codes', requireAdmin, (req, res) => {
         code,
         label,
         profil_id ? Number(profil_id) : null,
-        days
+        hours
       );
       codes.push(db.prepare('SELECT * FROM access_codes WHERE id = ?').get(result.lastInsertRowid));
     }

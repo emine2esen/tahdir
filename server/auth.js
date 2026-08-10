@@ -31,8 +31,8 @@ function isCodeExpired(row) {
 
 function remainingJwtExpiry(row) {
   if (!row.expires_at) {
-    const days = Number(row.duration_days) || 7;
-    return `${days}d`;
+    const hours = Number(row.duration_hours) || 168;
+    return `${hours}h`;
   }
   const ms = new Date(row.expires_at).getTime() - Date.now();
   if (ms <= 0) return '1s';

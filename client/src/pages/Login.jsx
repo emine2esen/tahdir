@@ -71,8 +71,9 @@ export default function Login() {
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="CONCOURS-XXXX"
+              placeholder="123456"
               dir="ltr"
+              inputMode="numeric"
               className="w-full rounded-xl border border-brand/20 bg-sand/50 px-4 py-3 text-lg tracking-wider outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition text-start"
               autoComplete="off"
               required

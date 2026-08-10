@@ -111,6 +111,17 @@ function ensureColumn(table, column, definition) {
 
 ensureColumn('access_codes', 'duration_days', 'INTEGER NOT NULL DEFAULT 7');
 ensureColumn('access_codes', 'expires_at', 'TEXT');
+
+const hadDurationHours = db
+  .prepare(`PRAGMA table_info(access_codes)`)
+  .all()
+  .some((c) => c.name === 'duration_hours');
+ensureColumn('access_codes', 'duration_hours', 'INTEGER NOT NULL DEFAULT 168');
+if (!hadDurationHours) {
+  // Migration : les anciens codes stockaient une durée en jours. On la convertit
+  // une fois en heures (nouvelle unité, pour permettre des durées comme 3h/5h).
+  db.exec(`UPDATE access_codes SET duration_hours = duration_days * 24`);
+}
 ensureColumn('questions', 'text_fr', "TEXT DEFAULT ''");
 ensureColumn('questions', 'text_ar', "TEXT DEFAULT ''");
 ensureColumn('questions', 'explanation_fr', "TEXT DEFAULT ''");

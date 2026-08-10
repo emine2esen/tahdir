@@ -19,7 +19,7 @@ export const translations = {
         'Un parcours simple, pensé pour les candidats aux concours mauritaniens. Les questions peuvent être en français ou en arabe.',
       step1Title: 'Recevez votre code',
       step1Text:
-        'Un code unique (ex. CONCOURS-XXXX) vous est fourni pour accéder à la plateforme.',
+        'Un code unique (ex. 123456) vous est fourni pour accéder à la plateforme.',
       step2Title: 'Choisissez un QCM',
       step2Text:
         'Parcourez les concours et profils disponibles, puis lancez le niveau qui vous convient.',
@@ -37,7 +37,7 @@ export const translations = {
         'À la fin, visualisez votre score et les bonnes réponses pour apprendre de chaque erreur.',
       feat4Title: 'Accès sécurisé',
       feat4Text:
-        'Un code unique vous est remis, valable de 1 jour à 1 mois. Une seule session à la fois : une nouvelle connexion déconnecte les autres.',
+        'Un code unique vous est remis, valable de 3 heures à 1 mois. Une seule session à la fois : une nouvelle connexion déconnecte les autres.',
       feat5Title: 'Questions bilingues',
       feat5Text:
         'Les énoncés et réponses peuvent être rédigés en arabe ou en français selon le concours.',
@@ -63,7 +63,7 @@ export const translations = {
         "Entrez le code unique qui vous a été remis. Il reste valable jusqu'à sa date d'expiration.",
       codeLabel: "Code d'accès unique",
       codeHint:
-        'Une seule session active à la fois. Vous pouvez vous reconnecter avec le même code tant qu\'il n\'a pas expiré (1 jour à 1 mois selon votre abonnement).',
+        'Une seule session active à la fois. Vous pouvez vous reconnecter avec le même code tant qu\'il n\'a pas expiré (3 heures à 1 mois selon votre abonnement).',
       submit: 'Accéder aux épreuves',
       loading: 'Connexion…',
     },
@@ -81,7 +81,7 @@ export const translations = {
       logout: 'Déconnexion',
       logoutTitle: 'Confirmer la déconnexion',
       logoutWarn:
-        "Après déconnexion, une seule session reste possible. Vous pourrez vous reconnecter avec le même code tant qu'il n'a pas expiré (1 jour à 1 mois selon votre abonnement). Deux sessions simultanées ne sont pas autorisées.",
+        "Après déconnexion, une seule session reste possible. Vous pourrez vous reconnecter avec le même code tant qu'il n'a pas expiré (3 heures à 1 mois selon votre abonnement). Deux sessions simultanées ne sont pas autorisées.",
       logoutConfirm: 'Se déconnecter',
       logoutCancel: 'Annuler',
     },
@@ -219,7 +219,7 @@ export const translations = {
         'مسار بسيط مخصص للمترشحين لمسابقات موريتانيا. يمكن أن تكون الأسئلة بالعربية أو بالفرنسية.',
       step1Title: 'احصل على رمزك',
       step1Text:
-        'يُمنح لك رمز فريد (مثل CONCOURS-XXXX) للدخول إلى المنصة.',
+        'يُمنح لك رمز فريد (مثل 123456) للدخول إلى المنصة.',
       step2Title: 'اختر اختباراً',
       step2Text:
         'تصفح المسابقات والشعَب المتاحة، ثم ابدأ المستوى المناسب لك.',
@@ -237,7 +237,7 @@ export const translations = {
         'في النهاية ترى درجتك والإجابات الصحيحة لتتعلم من أخطائك.',
       feat4Title: 'دخول آمن',
       feat4Text:
-        'رمز فريد صالح من يوم إلى شهر. جلسة واحدة فقط في نفس الوقت — كل دخول جديد يُنهي الجلسات الأخرى.',
+        'رمز فريد صالح من 3 ساعات إلى شهر. جلسة واحدة فقط في نفس الوقت — كل دخول جديد يُنهي الجلسات الأخرى.',
       feat5Title: 'أسئلة ثنائية اللغة',
       feat5Text:
         'يمكن صياغة الأسئلة والإجابات بالعربية أو بالفرنسية حسب المسابقة.',
@@ -260,7 +260,7 @@ export const translations = {
       subtitle: 'أدخل الرمز الفريد الذي حصلت عليه. يبقى صالحاً حتى تاريخ انتهائه.',
       codeLabel: 'رمز الدخول الفريد',
       codeHint:
-        'جلسة واحدة فقط في نفس الوقت. يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من يوم إلى شهر حسب اشتراكك).',
+        'جلسة واحدة فقط في نفس الوقت. يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من 3 ساعات إلى شهر حسب اشتراكك).',
       submit: 'الدخول إلى الاختبارات',
       loading: 'جاري الدخول…',
     },
@@ -278,7 +278,7 @@ export const translations = {
       logout: 'تسجيل الخروج',
       logoutTitle: 'تأكيد تسجيل الخروج',
       logoutWarn:
-        'بعد تسجيل الخروج يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من يوم إلى شهر حسب اشتراكك). لا يُسمح بجلستين في نفس الوقت.',
+        'بعد تسجيل الخروج يمكنك الدخول مجدداً بنفس الرمز طالما لم تنتهِ صلاحيته (من 3 ساعات إلى شهر حسب اشتراكك). لا يُسمح بجلستين في نفس الوقت.',
       logoutConfirm: 'تسجيل الخروج',
       logoutCancel: 'إلغاء',
     },
