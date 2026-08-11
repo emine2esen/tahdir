@@ -73,6 +73,7 @@ export const translations = {
       backHome: "Retour à l'accueil",
       assigned:
         'Votre code est lié à un profil spécifique — seuls les QCM de ce profil sont affichés.',
+      timeRemainingLabel: 'Accès valable encore',
       empty: 'Aucun concours disponible pour le moment.',
       level: 'Niveau {n}',
       minutes: '{n} min',
@@ -270,6 +271,7 @@ export const translations = {
       backHome: 'العودة إلى الرئيسية',
       assigned:
         'رمزك مرتبط بشعبة محددة — تظهر فقط اختبارات هذه الشعبة.',
+      timeRemainingLabel: 'صلاحية الدخول متبقية',
       empty: 'لا توجد مسابقات متاحة حالياً.',
       level: 'المستوى {n}',
       minutes: '{n} د',

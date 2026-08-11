@@ -1,5 +1,6 @@
 const DEVICE_KEY = 'tahdir_device_id';
 const CANDIDATE_TOKEN_KEY = 'tahdir_candidate_token';
+const CANDIDATE_EXPIRES_KEY = 'tahdir_candidate_expires_at';
 const ADMIN_TOKEN_KEY = 'tahdir_admin_token';
 
 export function getDeviceId() {
@@ -23,9 +24,22 @@ export function getCandidateToken() {
   return localStorage.getItem(CANDIDATE_TOKEN_KEY);
 }
 
-export function setCandidateToken(token) {
-  if (token) localStorage.setItem(CANDIDATE_TOKEN_KEY, token);
-  else localStorage.removeItem(CANDIDATE_TOKEN_KEY);
+export function setCandidateToken(token, expiresAt) {
+  if (token) {
+    localStorage.setItem(CANDIDATE_TOKEN_KEY, token);
+    if (expiresAt) localStorage.setItem(CANDIDATE_EXPIRES_KEY, expiresAt);
+  } else {
+    localStorage.removeItem(CANDIDATE_TOKEN_KEY);
+    localStorage.removeItem(CANDIDATE_EXPIRES_KEY);
+  }
+}
+
+export function getCandidateExpiresAt() {
+  return localStorage.getItem(CANDIDATE_EXPIRES_KEY);
+}
+
+export function setCandidateExpiresAt(expiresAt) {
+  if (expiresAt) localStorage.setItem(CANDIDATE_EXPIRES_KEY, expiresAt);
 }
 
 export function getAdminToken() {

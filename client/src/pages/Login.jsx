@@ -19,7 +19,7 @@ export default function Login() {
     api
       .candidateClaim()
       .then((data) => {
-        setCandidateToken(data.token);
+        setCandidateToken(data.token, data.expiresAt);
         navigate('/catalogue', { replace: true });
       })
       .catch(() => setCandidateToken(null));
@@ -31,7 +31,7 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await api.candidateLogin(code);
-      setCandidateToken(data.token);
+      setCandidateToken(data.token, data.expiresAt);
       navigate('/catalogue');
     } catch (err) {
       setError(err.message);

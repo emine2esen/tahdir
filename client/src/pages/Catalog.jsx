@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, setCandidateToken } from '../api';
+import { api, setCandidateToken, setCandidateExpiresAt } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import { textDir } from '../i18n/translations';
 import LangSwitcher from '../components/LangSwitcher';
+import CodeCountdown from '../components/CodeCountdown';
 
 export default function Catalog() {
   const navigate = useNavigate();
@@ -18,8 +19,11 @@ export default function Catalog() {
     let cancelled = false;
     (async () => {
       try {
-        const catalog = await api.catalog();
-        if (!cancelled) setData(catalog);
+        const [catalog, me] = await Promise.all([api.catalog(), api.candidateMe()]);
+        if (!cancelled) {
+          setData(catalog);
+          setCandidateExpiresAt(me.expiresAt);
+        }
       } catch (err) {
         if (err.code === 'SESSION_REPLACED' || err.status === 401) {
           setCandidateToken(null);
@@ -79,7 +83,8 @@ export default function Catalog() {
             <div className="font-display text-xl text-brand">{t('brand')}</div>
             <p className="text-xs text-muted">{t('catalog.subtitle')}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <CodeCountdown />
             <LangSwitcher />
             <button
               type="button"
@@ -180,10 +185,7 @@ export default function Catalog() {
                         to={`/qcm/${qcm.id}`}
                         className="group block rounded-xl border border-brand/10 bg-white/65 hover:bg-white hover:border-brand/30 hover:shadow-lg hover:shadow-brand/5 p-4 transition"
                       >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-gold">
-                            {t('catalog.level', { n: qcm.level })}
-                          </span>
+                        <div className="flex items-start justify-end mb-2">
                           <span className="text-xs text-muted">
                             {t('catalog.minutes', { n: qcm.duration_minutes })}
                           </span>
@@ -195,7 +197,6 @@ export default function Catalog() {
                           {qcm.title}
                         </div>
                         <div className="text-xs text-muted mt-2">
-                          {t(`levels.${qcm.level}`)} ·{' '}
                           {t('catalog.questionsCount', { n: qcm.questions_count })}
                         </div>
                       </Link>

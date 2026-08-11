@@ -17,7 +17,7 @@ export default function Home() {
     api
       .candidateClaim()
       .then((data) => {
-        setCandidateToken(data.token);
+        setCandidateToken(data.token, data.expiresAt);
         navigate('/catalogue', { replace: true });
       })
       .catch(() => setCandidateToken(null));

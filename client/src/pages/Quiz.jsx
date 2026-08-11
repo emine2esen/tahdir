@@ -305,7 +305,7 @@ export default function Quiz() {
         ) : (
           <div className="animate-fade-up">
             <p className="text-xs uppercase tracking-wider text-gold mb-2">
-              {t(`levels.${qcm.level}`)} · {t('quiz.multiHint')}
+              {t('quiz.multiHint')}
             </p>
             <p className="text-xs text-muted mb-3">{t('quiz.arabicNote')}</p>
             {question.text_lang !== lang && (
