@@ -4,8 +4,9 @@ import { api, scoreQuiz } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import { textDir } from '../i18n/translations';
 import LangSwitcher from '../components/LangSwitcher';
+import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from '../config';
 
-const WHATSAPP_FALLBACK = 'https://wa.me/22236949445';
+const WHATSAPP_FALLBACK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export default function Simulation() {
   const navigate = useNavigate();
@@ -353,7 +354,7 @@ export default function Simulation() {
             <div className="rounded-2xl border border-brand/10 bg-white/70 p-8 text-center">
               <p className="text-muted max-w-md mx-auto">{t('sim.ctaText')}</p>
               <p className="font-semibold text-brand-dark mt-2" dir="ltr">
-                36949445
+                {WHATSAPP_DISPLAY}
               </p>
               <div className="flex flex-wrap justify-center gap-3 mt-6">
                 <a

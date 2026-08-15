@@ -4,8 +4,7 @@ import { api, setCandidateToken } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import LangSwitcher from '../components/LangSwitcher';
 import DevContact from '../components/DevContact';
-
-const CODE_WHATSAPP = '22236949445';
+import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from '../config';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -85,7 +84,7 @@ export default function Home() {
                 {t('home.enterCode')}
               </Link>
               <a
-                href={`https://wa.me/${CODE_WHATSAPP}`}
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white font-semibold px-7 py-3.5 hover:brightness-105 transition"
@@ -94,7 +93,7 @@ export default function Home() {
               </a>
             </div>
             <p className="animate-fade-up-delay-2 text-xs text-muted mt-4 max-w-md mx-auto">
-              {t('home.requestCodeNotice')}
+              {t('home.requestCodeNotice', { number: WHATSAPP_DISPLAY })}
             </p>
             <p className="animate-fade-up-delay-2 text-xs text-gold bg-gold/10 border border-gold/25 rounded-lg px-4 py-2.5 mt-4 max-w-lg mx-auto">
               {t('home.availabilityNotice')}

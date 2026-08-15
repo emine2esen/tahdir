@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, setCandidateToken } from '../api';
 import { useLang } from '../i18n/LanguageContext';
 import LangSwitcher from '../components/LangSwitcher';
-
-const CODE_WHATSAPP = '22236949445';
+import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from '../config';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -95,7 +94,7 @@ export default function Login() {
 
           <div className="text-center mt-6">
             <a
-              href={`https://wa.me/${CODE_WHATSAPP}`}
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white font-semibold px-6 py-3 hover:brightness-105 transition"
@@ -103,7 +102,7 @@ export default function Login() {
               {t('home.requestCode')}
             </a>
             <p className="text-xs text-muted mt-3 max-w-sm mx-auto">
-              {t('home.requestCodeNotice')}
+              {t('home.requestCodeNotice', { number: WHATSAPP_DISPLAY })}
             </p>
           </div>
         </div>

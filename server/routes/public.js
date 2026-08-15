@@ -4,7 +4,7 @@ const { mapQuestion, mapChoice, pickLang } = require('../locale');
 
 const router = express.Router();
 
-const WHATSAPP_NUMBER = '22236949445';
+const WHATSAPP_NUMBER = '22227707210';
 
 /** Catalogue public pour la simulation (sans auth) */
 router.get('/catalog', (_req, res) => {
@@ -120,7 +120,7 @@ router.get('/simulation', (req, res) => {
 
 router.get('/contact', (_req, res) => {
   res.json({
-    phone: '36949445',
+    phone: '27707210',
     whatsapp: WHATSAPP_NUMBER,
     whatsappUrl: `https://wa.me/${WHATSAPP_NUMBER}`,
   });

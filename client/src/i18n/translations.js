@@ -48,7 +48,7 @@ export const translations = {
       footer: 'Tahdir — Préparation aux concours · Mauritanie',
       requestCode: 'Demander un code',
       requestCodeNotice:
-        "Le code d'accès vous est fourni par téléphone ou sur WhatsApp au 36949445.",
+        "Le code d'accès vous est fourni par téléphone ou sur WhatsApp au {number}.",
       availabilityNotice:
         "Certains recrutements ou profils peuvent ne pas être disponibles pour le moment, mais notre équipe travaille activement à compléter l'ensemble des profils et concours.",
     },
@@ -247,7 +247,7 @@ export const translations = {
       accessExams: 'الدخول إلى الاختبارات',
       footer: 'تَحضير — التحضير للمسابقات · موريتانيا',
       requestCode: 'طلب رمز',
-      requestCodeNotice: 'يُسلَّم لك رمز الدخول عبر الهاتف أو واتساب على الرقم 36949445.',
+      requestCodeNotice: 'يُسلَّم لك رمز الدخول عبر الهاتف أو واتساب على الرقم {number}.',
       availabilityNotice:
         'قد لا تكون بعض المسابقات أو الشُّعب متاحة حالياً، لكن فريقنا يعمل باستمرار على استكمال جميع الشُّعب والمسابقات.',
     },
